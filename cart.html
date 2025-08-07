@@ -523,98 +523,7 @@ let rows = cart.map(item => {
 
     // --- תשלום (סיום ההזמנה, שליחה לשרת, איפוס סל) ---
 
-async function checkout() {
-  const sumEl = document.getElementById('paySum');
-  const methodEl = document.querySelector('input[name="pay-method"]:checked');
-  const addressEl = document.getElementById('orderAddress');
-  const cardInput = document.getElementById('creditCardNumber');
-
-  const sum = sumEl ? sumEl.textContent : '$0.00';
-  const method = methodEl ? methodEl.value : 'credit';
-  const cart = getUserCart();
-  const user = getCurrentUser();
-  const orderAddress = (addressEl?.value || user.address || '').trim();
-
-  // בדיקות בסיסיות
-  if (!cart.length) {
-    alert("העגלה ריקה, אין מה לשלם.");
-    return;
-  }
-  if (!user.username) {
-    alert("חובה להתחבר כדי לבצע רכישה.");
-    return;
-  }
-  if (!orderAddress) {
-    alert("חובה למלא כתובת למשלוח.");
-    addressEl?.focus();
-    return;
-  }
-  // בדיקה פשוטה למספר כרטיס אשראי אם בחר אשראי
-  if (method === 'credit' && !cardInput.value.trim()) {
-    alert("חובה להזין מספר כרטיס אשראי.");
-    cardInput.focus();
-    return;
-  }
-
-  // בניית אובייקט הזמנה
-  const newOrder = {
-    orderId: "ORDER_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10),
-    date: new Date().toISOString(),
-    sum: sum,
-    method: method,
-    address: orderAddress,
-    items: cart,
-    status: "completed"
-  };
-
-  try {
-    // שליפת כל המשתמשים מהשרת (BIN)
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-      headers: { "X-Master-Key": API_KEY }
-    });
-    if (!response.ok) throw new Error(`שגיאה בקריאת BIN: ${response.status}`);
-    const data = await response.json();
-
-    let users = Array.isArray(data.record?.users) ? data.record.users : [];
-    const userIndex = users.findIndex(u => u.username === user.username);
-    if (userIndex === -1) throw new Error("לא נמצא משתמש מחובר ב־BIN");
-
-    // הוספת ההזמנה החדשה ואיפוס העגלה
-    if (!Array.isArray(users[userIndex].orders)) users[userIndex].orders = [];
-    users[userIndex].orders.push(newOrder);
-    users[userIndex].cart = [];
-    users[userIndex].cartUpdatedAt = Date.now();
-
-    // שמירה חזרה ל־BIN
-    const saveRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Master-Key": API_KEY
-      },
-      body: JSON.stringify({ users })
-    });
-    if (!saveRes.ok) throw new Error(`שגיאה בשמירה ל־BIN: ${saveRes.status}`);
-
-    // עדכון מקומי
-    setCurrentUser(users[userIndex]);
-    localStorage.setItem('cart', '[]');
-    localStorage.setItem('lastCartChange', String(Date.now()));
-
-    // רענון תצוגה
-    renderCart();
-    updateCartCount();
-    const badge = document.getElementById('cartCount');
-    if (badge) badge.textContent = '0';
-
-    showOrderSuccessModal(`ההזמנה בוצעה בהצלחה! המוצרים בדרך אלייך. התשלום בוצע באמצעות ${method}.`);
-
-  } catch (err) {
-    alert("❌ שגיאה בשמירת ההזמנה. בדקי את ה־console לפרטים.");
-    console.error("❌ שגיאה:", err);
-  }
-}
-
+checkout
 
 
     // --- פונקציה לסנכרון עם BIN (שמירה/שליפה לעדכון עגלות) ---
@@ -666,5 +575,6 @@ async function checkout() {
 
 
 </html>
+
 
 
