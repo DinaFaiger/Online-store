@@ -1,691 +1,702 @@
-<!DOCTYPE html>
-<html lang="he">
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>חנות דיגיטלית</title>
-  <!-- קישור לקובץ CSS חיצוני לעיצוב -->
-  <link rel="stylesheet" href="index.css">
-</head>
-
-<body>
-  <!-- סרגל ניווט עליון עם לוגו, חיפוש, סל קניות וכניסה -->
-  <nav>
-    <div class="nav-header">
-      <!-- לוגו החנות -->
-      <a href="index.html">
-        <img src="image/logo.png" class="logo-img" alt="לוגו החנות" />
-      </a>
-
-      <!-- תיבת חיפוש מוצרים -->
-      <div class="nav-search">
-        <input type="text" id="searchBox" placeholder="חיפוש מוצר..." autocomplete="off" />
-        <span style="font-size:1.2rem;color:#6c49ff;">🔍</span>
-      </div>
-      <!-- פעולות משתמש: סל קניות, אווטר, התחברות -->
-      <div class="nav-actions">
-        <!-- כפתור מעבר לסל הקניות -->
-        <button class="cart-btn" onclick="window.location.href='cart.html'">
-          <span class="cart-count" id="cartCount">0</span> 🛒 סל
-        </button>
-        <!-- הצגת אווטר משתמש מחובר -->
-        <div class="user-avatar" id="userAvatar" style="display:none;">
-          <span id="avatarInitial"></span>
-          <div class="user-dropdown" id="userDropdown">
-            <button onclick="goToProfile()">פרטים אישיים</button>
-            <button onclick="logoutUser()">התנתק</button>
-          </div>
-        </div>
-        <!-- כפתור התחברות -->
-        <button class="login-btn" id="loginBtn" onclick="showLoginPopup()">התחבר</button>
-      </div>
-    </div>
-    <!-- תפריט ראשי של קטגוריות -->
-    <ul class="menu" id="mainMenu"></ul>
-  </nav>
-
-  <!-- באנר מבצעים רץ -->
-  <section id="promoBanner" class="promo-container" style="position: relative;">
-    <div class="sale-animation">
-      <img src="image/sale.png" alt="מבצע">
-    </div>
-    <div class="promo-slider" id="promoTrack"></div>
-  </section>
-
-  <main>
-    <!-- כותרת קטגוריה/חיפוש -->
-    <div class="products-title" id="productsTitle"></div>
-    <!-- אזור הצגת כרטיסי מוצרים -->
-    <div class="products-container" id="productsContainer"></div>
-    <!-- כפתור טעינת עוד מוצרים -->
-    <button class="load-more-btn" id="loadMoreBtn" style="display:none;" onclick="loadMoreProducts()">טען עוד
-      מוצרים</button>
-  </main>
-
-  <!-- פוטר ליצירת קשר -->
-  <footer>
-    יצירת קשר: <b>support@onlineShop.co.il</b> | יש לך שאלה? <a href="mailto:support@onlineShop.co.il">פנה אלינו</a>
-  </footer>
-
-  <script>
-    // --- משתנים גלובליים ---
-    // מזהה ה-BIN וה-API KEY לשמירת משתמשים/סלים ב-jsonbin.io
-    const BIN_ID = "687d68e6fdac391a2ff106cd";
-    const API_KEY = "$2a$10$jUdVbRFsQ.nFPu9sdEhLGuFKyLKnsopNmK7f9K2anJSQ3noWGvHMq";
-
-    // מיפוי קטגוריות ראשיות ותתי קטגוריות
-    const categories = {
-      'נשים': ['womens-dresses', 'womens-shoes', 'womens-watches', 'womens-bags', 'womens-jewellery'],
-      'גברים': ['mens-shirts', 'mens-shoes', 'mens-watches'],
-      'טכנולוגיה': ['smartphones', 'laptops', 'tablets', 'mobile-accessories'],
-      'יופי': ['beauty', 'skin-care', 'fragrances'],
-      'לבית': ['furniture', 'home-decoration', 'kitchen-accessories'],
-      'סופר': ['groceries'],
-      'אביזרים': ['sports-accessories', 'sunglasses'],
-      'רכב': ['motorcycle', 'vehicle'],
-      'אופנה': ['tops']
-    };
-
-    // מיפוי שם תצוגה עברי לכל תת-קטגוריה
-    const catDisplay = {
-      'womens-dresses': 'שמלות נשים',
-      'womens-shoes': 'נעלי נשים',
-      'womens-watches': 'שעוני נשים',
-      'womens-bags': 'תיקי נשים',
-      'womens-jewellery': 'תכשיטי נשים',
-      'mens-shirts': 'חולצות גברים',
-      'mens-shoes': 'נעלי גברים',
-      'mens-watches': 'שעוני גברים',
-      'smartphones': 'סמארטפונים',
-      'laptops': 'מחשבים ניידים',
-      'tablets': 'טאבלטים',
-      'mobile-accessories': 'אביזרי מובייל',
-      'beauty': 'יופי',
-      'skin-care': 'טיפוח העור',
-      'fragrances': 'בשמים',
-      'furniture': 'רהיטים',
-      'home-decoration': 'עיצוב הבית',
-      'kitchen-accessories': 'אביזרי מטבח',
-      'groceries': 'מכולת',
-      'sports-accessories': 'אביזרי ספורט',
-      'sunglasses': 'משקפי שמש',
-      'motorcycle': 'אופנועים',
-      'vehicle': 'רכבים',
-      'tops': 'חולצות וטופים'
-    };
-
-    // --- פונקציות ניהול משתמשים וסל קניות ---
-
-    // בדיקה האם יש משתמש מחובר
-    function isUserLoggedIn() {
-      return !!localStorage.getItem('user');
-    }
-    // שליפת אובייקט המשתמש מה-localStorage
-    function getUser() {
-      try {
-        return JSON.parse(localStorage.getItem('user') || '{}');
-      } catch {
-        return {};
-      }
-    }
-    // שמירת משתמש ל-localStorage
-    function setUser(userObj) {
-      localStorage.setItem('user', JSON.stringify(userObj));
-    }
-    // מחיקת משתמש מה-localStorage
-    function clearUser() {
-      localStorage.removeItem('user');
-    }
-
-    // הצגת האווטר כאשר משתמש מחובר
-    function setAvatar() {
-      const user = getUser();
-      let displayName = user.username || '';
-      const loginBtn = document.getElementById('loginBtn');
-      const userAvatar = document.getElementById('userAvatar');
-      const avatarInitial = document.getElementById('avatarInitial');
-      if (loginBtn) loginBtn.style.display = 'none';
-      if (userAvatar) userAvatar.style.display = 'inline-flex';
-      if (avatarInitial) avatarInitial.textContent = displayName.charAt(0) || 'מ';
-    }
-
-    // עדכון ספירת פריטים בסל קניות
-    function updateCartCount() {
-      let cart = getUserCart();
-      let sum = cart.reduce((a, b) => a + (b.quantity || 1), 0);
-      const cartCountEl = document.getElementById('cartCount');
-      if (cartCountEl) cartCountEl.textContent = sum;
-    }
-
-    // שליפת סל קניות של המשתמש
-    function getUserCart() {
-      let user = JSON.parse(localStorage.getItem('user') || '{}');
-      return Array.isArray(user.cart) ? user.cart : [];
-    }
-
-    // --- הוספת מוצר לסל קניות (כולל מבצע) ---
-    async function addToCart(id, title, thumbnail, price, event, promoPrice = null) {
-      if (!isUserLoggedIn()) {
-        showLoginPopup();
-        return;
-      }
-      let user = getUser();
-      let cart = Array.isArray(user.cart) ? user.cart : [];
-
-      // בדיקה האם המוצר כבר בסל
-      let existing = cart.find(item => item.id === id);
-      if (existing) {
-        existing.quantity += 1;
-      } else {
-        cart.push({
-          id,
-          title,
-          thumbnail,
-          price: promoPrice !== null ? promoPrice : price, // שמירת מחיר מבצע אם יש
-          originalPrice: price,
-          quantity: 1
-        });
-      }
-
-      user.cart = cart;
-      user.cartUpdatedAt = Date.now();
-      setUser(user);
-      updateCartCount();
-
-      // אנימציה/הודעה בכפתור הוספה לסל
-      if (event) {
-        const btn = event.target || event;
-        const originalText = btn.textContent;
-        const originalBg = btn.style.background;
-        btn.textContent = promoPrice !== null ? "נוסף למבצע ✓" : "נוסף לסל ✓";
-        btn.style.background = "#4CAF50"; // ירוק
-        btn.disabled = true;
-        setTimeout(() => {
-          btn.textContent = originalText;
-          btn.style.background = originalBg;
-          btn.disabled = false;
-        }, 1500);
-      }
-
-      // שמירה לשרת BIN (jsonbin)
-      setTimeout(async () => {
-        try {
-          const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-            headers: { "X-Master-Key": API_KEY }
-          });
-          const data = await res.json();
-          const users = data.record.users || [];
-          let idx = users.findIndex(u => u.username === user.username);
-          if (idx !== -1) {
-            users[idx].cart = cart;
-            users[idx].cartUpdatedAt = user.cartUpdatedAt;
-            await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Master-Key": API_KEY
-              },
-              body: JSON.stringify({ users })
-            });
-          }
-        } catch (err) {
-          console.warn('שגיאה בשמירת הסל:', err);
-        }
-      }, 200);
-    }
-
-    // הוספת מוצר מהחלון של מבצע
-    function addToCartFromWindowPromo(productKey, buttonElement) {
-      const productData = window[productKey];
-      if (productData) {
-        addToCart(
-          productData.id,
-          productData.title,
-          productData.thumbnail,
-          productData.price,
-          buttonElement,
-          productData.promoPrice
-        );
-      }
-    }
-
-    // --- בניית תפריט קטגוריות ראשי ודינמי ---
-    function buildMenu() {
-      const mainMenu = document.getElementById('mainMenu');
-      if (!mainMenu) return;
-
-      mainMenu.innerHTML = '';
-      Object.entries(categories).forEach(([mainCat, subcats]) => {
-        let li = document.createElement('li');
-        li.className = 'menu-item';
-        li.tabIndex = 0;
-        li.textContent = mainCat;
-
-        li.onclick = async () => {
-          closeAllMenus();
-          document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('selected'));
-          li.classList.add('selected');
-          let allProducts = [];
-          for (let cat of subcats) {
-            try {
-              const res = await fetch(`https://dummyjson.com/products/category/${cat}`);
-              const data = await res.json();
-              allProducts = allProducts.concat(data.products || []);
-            } catch (err) {
-              console.error('שגיאה בטעינת קטגוריה:', cat, err);
-            }
-          }
-          renderProducts(allProducts);
-          document.getElementById('productsTitle').textContent = 'כל המוצרים בקטגוריה: ' + mainCat;
-          document.getElementById('loadMoreBtn').style.display = 'none';
-        };
-
-        // בניית תפריט משנה (תתי קטגוריות)
-        if (subcats.length) {
-          let submenu = document.createElement('ul');
-          submenu.className = 'submenu';
-          subcats.forEach(sc => {
-            let btn = document.createElement('button');
-            btn.className = 'submenu-btn';
-            btn.textContent = catDisplay[sc];
-            btn.onclick = (e) => {
-              e.stopPropagation();
-              closeAllMenus();
-              document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('selected'));
-              li.classList.add('selected');
-              loadProducts(sc, true);
-              document.getElementById('productsTitle').textContent = 'כל המוצרים בקטגוריה: ' + catDisplay[sc];
-              document.getElementById('loadMoreBtn').style.display = 'none';
-            };
-            submenu.appendChild(btn);
-          });
-          li.appendChild(submenu);
-          li.addEventListener('mouseenter', () => {
-            closeAllMenus();
-            li.classList.add('open');
-          });
-          li.addEventListener('mouseleave', () => {
-            li.classList.remove('open');
-          });
-        }
-        mainMenu.appendChild(li);
-      });
-    }
-    // סגירת כל התפריטים (משנה)
-    function closeAllMenus() {
-      document.querySelectorAll('.menu-item.open').forEach(el => el.classList.remove('open'));
-    }
-
-    // --- טעינת מוצרים דינאמית ---
-    let allProducts = [], currPage = 0, currCat = '', isLoading = false, hasMoreProducts = true;
-    const PRODUCTS_PER_PAGE = 20;
-    async function loadProducts(cat = '', reset = true) {
-      if (isLoading) return;
-      isLoading = true;
-      updateLoadMoreButton();
-
-      try {
-        if (reset) {
-          currCat = cat;
-          currPage = 0;
-          allProducts = [];
-          hasMoreProducts = true;
-          const container = document.getElementById('productsContainer');
-          if (container) container.innerHTML = '<div style="text-align:center;padding:2rem;color:#6c49ff;font-size:1.2rem;">טוען מוצרים...</div>';
-        }
-
-        let skip = currPage * PRODUCTS_PER_PAGE;
-        let url = cat
-          ? `https://dummyjson.com/products/category/${cat}?limit=${PRODUCTS_PER_PAGE}&skip=${skip}`
-          : `https://dummyjson.com/products?limit=${PRODUCTS_PER_PAGE}&skip=${skip}`;
-
-        const res = await fetch(url);
-        const data = await res.json();
-        let products = data.products || [];
-
-        allProducts = reset ? products : [...allProducts, ...products];
-        hasMoreProducts = products.length === PRODUCTS_PER_PAGE;
-        currPage++;
-
-        renderProducts(allProducts);
-      } catch (err) {
-        const container = document.getElementById('productsContainer');
-        if (container) {
-          container.innerHTML = '<div style="text-align:center;padding:2rem;color:#fd52af;">שגיאה בטעינת המוצרים</div>';
-        }
-      } finally {
-        isLoading = false;
-        updateLoadMoreButton();
-      }
-    }
-    // טעינת עמוד נוסף של מוצרים
-    function loadMoreProducts() {
-      const searchBox = document.getElementById('searchBox');
-      if (searchBox && searchBox.value.trim()) return;
-      if (isLoading) {
-        isLoading = false;
-        return;
-      }
-      loadProducts(currCat, false).catch(() => {
-        isLoading = false;
-        updateLoadMoreButton();
-      });
-    }
-    // עדכון סטטוס כפתור "טען עוד מוצרים"
-    function updateLoadMoreButton() {
-      const btn = document.getElementById('loadMoreBtn');
-      if (!btn) return;
-      if (hasMoreProducts && allProducts.length > 0) {
-        btn.style.display = 'block';
-        btn.disabled = isLoading;
-        btn.textContent = isLoading ? 'טוען...' : 'טען עוד מוצרים';
-      } else {
-        btn.style.display = 'none';
-      }
-    }
-
-    // --- הצגת כרטיסי מוצרים בדף הראשי ---
-    function renderProducts(products) {
-      const container = document.getElementById('productsContainer');
-      if (!container) return;
-      if (!products || products.length === 0) {
-        container.innerHTML = '<div style="text-align:center;padding:2rem;color:#6c49ff;">לא נמצאו מוצרים</div>';
-        return;
-      }
-
-      const html = products.map((prod, index) => {
-        const productKey = `product_${prod.id}_${index}`;
-        window[productKey] = {
-          id: prod.id,
-          title: prod.title,
-          thumbnail: prod.thumbnail,
-          price: prod.price,
-          promoPrice: null
-        };
-
-        const safeTitle = (prod.title || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        const safeThumbnail = (prod.thumbnail || '').replace(/"/g, '&quot;');
-
-        return `
-        <div class="product-card">
-          <a href="product.html?id=${prod.id}&promo=${prod.promoPrice}" style="text-decoration: none; color: inherit; display: block;">
-            <img src="${safeThumbnail}" alt="${safeTitle}" class="product-img" onerror="this.src='https://via.placeholder.com/100x100?text=No+Image'">
-            <h3 class="product-title">${safeTitle}</h3>
-            <p class="product-price">$${prod.price || 0}</p>
-          </a>
-          <button class="add-to-cart-btn" onclick="event.stopPropagation(); addToCartFromWindowPromo('${productKey}', this)">הוסף לסל 🛒</button>
-        </div>
-      `;
-      }).join('');
-
-      container.innerHTML = html;
-    }
-
-    // --- טעינת מוצרים עם מבצע לסרט המבצעים ---
-    async function loadPromoProducts() {
-      try {
-        let allPromoCandidates = [];
-        const categoryArrays = Object.values(categories);
-        const flatCategories = categoryArrays.flat();
-
-        // קריאות מקבילות לכל הקטגוריות
-        const fetches = flatCategories.map(cat => fetch(`https://dummyjson.com/products/category/${cat}?limit=20`));
-        const results = await Promise.all(fetches);
-
-        for (const res of results) {
-          const data = await res.json();
-          allPromoCandidates = allPromoCandidates.concat(data.products || []);
-        }
-
-        // בחירת 10 מוצרים אקראיים
-        const selected = getRandomUnique(allPromoCandidates, 10);
-        selected.forEach(prod => {
-          prod.promoPrice = Math.round(prod.price * 0.9);
-        });
-
-        renderPromoBanner(selected);
-      } catch (err) {
-        console.error('שגיאה בטעינת מבצעים:', err);
-      }
-    }
-
-    // --- שליפת n מוצרים אקראיים מהמערך ---
-    function getRandomUnique(arr, n) {
-      const result = [];
-      const taken = new Set();
-      while (result.length < n && result.length < arr.length) {
-        const idx = Math.floor(Math.random() * arr.length);
-        if (!taken.has(idx)) {
-          taken.add(idx);
-          result.push(arr[idx]);
-        }
-      }
-      return result;
-    }
-
-    // --- הצגת סרט המבצעים (קארוסל מוצרים) ---
-    function renderPromoBanner(products) {
-      const promoTrack = document.getElementById('promoTrack');
-      if (!promoTrack) return;
-
-      const html = products.map((prod, index) => {
-        const productKey = `promo_product_${prod.id}_${index}`;
-        window[productKey] = prod;
-
-        return `
-        <div class="promo-item">
-          <div class="promo-badge">10% מבצע</div>
-      <a href="product.html?id=${prod.id}&promo=${prod.promoPrice}" style="text-decoration: none; color: inherit; display: block;">
-            <img src="${prod.thumbnail}" alt="${prod.title}">
-            <div class="promo-title">${prod.title}</div>
-            <div>
-              <span class="promo-price">$${prod.promoPrice}</span>
-              <span class="promo-original-price">$${prod.price}</span>
-            </div>
-          </a>
-          <button class="add-to-cart-btn" onclick="event.stopPropagation(); addToCartFromWindowPromo('${productKey}', this)">הוסף למבצע 🛒</button>
-        </div>
-      `;
-      }).join('');
-
-      // שכפול התוכן כדי ליצור ריצה אינסופית של המבצעים
-      promoTrack.innerHTML = html + html;
-    }
-
-    // --- אנימציית גלילה אוטומטית לסרט המבצעים ---
-    function animatePromoBanner(container) {
-      let scrollPos = 0;
-      const speed = 0.5; // מהירות גלילה
-
-      // נדביק את התוכן פעמיים כדי לאפשר לולאה אינסופית
-      container.innerHTML += container.innerHTML;
-      const scrollWidth = container.scrollWidth / 2;
-
-      function step() {
-        scrollPos += speed;
-        if (scrollPos >= scrollWidth) scrollPos = 0;
-        container.scrollLeft = scrollPos;
-        requestAnimationFrame(step);
-      }
-      step();
-    }
-
-    // --- פונקציות נוספות: חיפוש מוצרים, סנכרון משתמש, התחברות וכו' ---
-
-    // חיפוש מוצרים לפי מחרוזת
-    async function searchProducts(q) {
-      const container = document.getElementById('productsContainer');
-      if (!container) return;
-
-      container.innerHTML = '<div style="text-align:center;padding:2rem;color:#6c49ff;">מחפש תוצאות...</div>';
-
-      try {
-        const res = await fetch(`https://dummyjson.com/products/search?q=${encodeURIComponent(q)}`);
-        const data = await res.json();
-        renderProducts(data.products || []);
-        document.getElementById('loadMoreBtn').style.display = 'none';
-      } catch (err) {
-        container.innerHTML = '<div style="text-align:center;padding:2rem;color:#fd52af;">שגיאה בחיפוש</div>';
-      }
-    }
-
-    // סנכרון משתמש מקומי עם הנתונים ב-BIN
-    async function syncUserWithBin() {
-      if (!localStorage.getItem('user')) return;
-      try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-          headers: { "X-Master-Key": API_KEY }
-        });
-        const data = await res.json();
-        const users = data.record.users || [];
-        let localUser = JSON.parse(localStorage.getItem('user') || '{}');
-        let binUser = users.find(u => u.username === localUser.username);
-
-        localUser.cartUpdatedAt = localUser.cartUpdatedAt || 0;
-        if (binUser) binUser.cartUpdatedAt = binUser.cartUpdatedAt || 0;
-
-        if (binUser && binUser.cartUpdatedAt > localUser.cartUpdatedAt) {
-          localStorage.setItem('user', JSON.stringify(binUser));
-        } else if (binUser && localUser.cartUpdatedAt > binUser.cartUpdatedAt) {
-          let idx = users.findIndex(u => u.username === localUser.username);
-          users[idx] = localUser;
-          await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Master-Key": API_KEY
-            },
-            body: JSON.stringify({ users })
-          });
-        }
-      } catch (err) {
-        console.warn("שגיאה בסנכרון עם BIN:", err);
-      }
-    }
-
-    // מעבר לדף פרופיל משתמש
-    function goToProfile() {
-      window.location.href = 'profile.html';
-    }
-    // התנתקות משתמש
-    function logoutUser() {
-      clearUser();
-      updateCartCount();
-      document.getElementById('loginBtn').style.display = 'inline-block';
-      document.getElementById('userAvatar').style.display = 'none';
-      showSuccessMessage('התנתקת בהצלחה');
-      setTimeout(() => location.reload(), 1000);
-    }
-    // הצגת פופאפ התחברות
-    function showLoginPopup() {
-      if (document.getElementById("loginPopup")) return;
-
-      const popup = document.createElement('div');
-      popup.id = "loginPopup";
-      popup.className = "login-popup-bg";
-      popup.innerHTML = `
-      <div class="login-popup-inner">
-        <h3>על מנת להוסיף לסל</h3>
-        <div>יש להתחבר תחילה למערכת</div>
-        <button onclick="window.location.href='login.html'">התחברי עכשיו</button><br>
-        <button class="close-btn" onclick="document.getElementById('loginPopup').remove()">סגור</button>
-      </div>`;
-      document.body.appendChild(popup);
-      popup.addEventListener('click', (e) => {
-        if (e.target === popup) {
-          popup.remove();
-        }
-      });
-    }
-    // הצגת הודעת הצלחה
-    function showSuccessMessage(message) {
-      const msg = document.createElement('div');
-      msg.style.cssText = `
-      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-      background: linear-gradient(135deg, #4CAF50, #45a049);
-      color: white; padding: 1rem 2rem; border-radius: 25px;
-      z-index: 10000; font-weight: 600; box-shadow: 0 4px 15px rgba(76,175,80,0.3);
-      animation: fadeIn 0.5s ease-out;
-    `;
-      msg.textContent = message;
-      document.body.appendChild(msg);
-      setTimeout(() => {
-        if (msg.parentNode) msg.remove();
-      }, 2000);
-    }
-
-    // --- אתחול הדף: טעינת תפריט, מוצרים ומבצעים ---
-    document.addEventListener('DOMContentLoaded', async function () {
-      await syncUserWithBin();
-
-      if (isUserLoggedIn()) {
-        setAvatar();
-        document.getElementById('userAvatar').style.display = 'inline-flex';
-        document.getElementById('loginBtn').style.display = 'none';
-        updateCartCount();
-      } else {
-        document.getElementById('loginBtn').style.display = 'inline-block';
-        document.getElementById('userAvatar').style.display = 'none';
-        updateCartCount();
-      }
-
-      buildMenu();
-      loadProducts();
-      loadPromoProducts();
-
-      // חיפוש מוצרים
-      const searchBox = document.getElementById('searchBox');
-      if (searchBox) {
-        searchBox.addEventListener('input', async function (e) {
-          const q = e.target.value.trim();
-          if (!q) {
-            loadProducts('', true);
-            return;
-          }
-          searchProducts(q);
-        });
-      }
-
-      // תפריט משתמש (אווטר)
-      const userAvatar = document.getElementById('userAvatar');
-      if (userAvatar) {
-        userAvatar.onclick = function (event) {
-          event.stopPropagation();
-          this.classList.toggle('open');
-        };
-      }
-      document.body.addEventListener('click', function () {
-        if (userAvatar) userAvatar.classList.remove('open');
-      });
-    });
-
-    // --- אנימציה חלקה לסרט המבצעים ---
-    function animatePromoBannerSmooth(container) {
-      if (!container) return;
-
-      const items = container.children;
-      if (items.length === 0) return;
-
-      let scrollAmount = 0;
-      const speed = 0.8; // מהירות גלילה
-
-      function scrollStep() {
-        scrollAmount += speed;
-        container.scrollLeft = scrollAmount;
-
-        // חוזרים להתחלה כשמגיעים לסוף
-        if (scrollAmount >= container.scrollWidth / 2) {
-          scrollAmount = 0;
-          container.scrollLeft = 0;
-        }
-        requestAnimationFrame(scrollStep);
-      }
-
-      scrollStep();
-    }
-
-  </script>
-</body>
-
-</html>
+/* עיצוב בסיסי של html וה־body */
+html, body {
+  background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%) !important;  /* רקע מדורג בצבעים */
+  min-height: 100vh;                      /* גובה מינימלי של כל הדף לגובה המסך */
+  font-family: Arial, sans-serif;          
+  direction: rtl;                          /* יישור לימין - עברית */
+  margin: 0;                               /* אין ריווח מסביב */
+  line-height: 1.6;                        /* מרווח בין שורות */
+}
+
+/* סרגל עליון */
+nav {
+  background: #fff;                        /* רקע לבן */
+  box-shadow: 0 4px 24px rgba(185, 147, 252, 0.17); /* צללת רכה */
+  border-radius: 0 0 16px 16px;            /* פינות עגולות בתחתית */
+  margin-bottom: 1.5rem;                   /* ריווח מתחת */
+  position: sticky;                        /* נשאר למעלה בגלילה */
+  top: 0;                                  /* נצמד לראש הדף */
+  z-index: 100;                            /* מעל שאר האלמנטים */
+}
+
+/* שורת ראש (בתוך ה־nav) */
+.nav-header {
+  display: flex;                           /* פריסה בשורה */
+  align-items: center;                     /* מיושר לאמצע לגובה */
+  justify-content: space-between;          /* רווח בין צד ימין לשמאל */
+  padding: 1rem 2vw;                       /* ריווח פנימי */
+  gap: 1rem;                               /* ריווח בין פריטים */
+  direction: rtl;                          /* יישור לימין */
+}
+
+/* פעולות משתמש (סל, אוואטר, התחברות) */
+.nav-actions {
+  display: flex;                           /* הצגת כפתורים בשורה */
+  align-items: center;                     /* יישור אנכי למרכז */
+  gap: 10px;                               /* רווח בין הכפתורים */
+}
+
+/* לוגו טקסטואלי */
+.store-logo {
+  font-size: 1.6rem;                       /* גודל אות */
+  font-weight: bold;                       /* מודגש */
+  color: #6c49ff;                          /* צבע סגול */
+  cursor: pointer;                         /* יד עכבר */
+  transition: color 0.3s;                  /* מעבר צבע חלק */
+  display: flex;                           /* טקסט + אייקון יחד */
+  align-items: center;                     /* יישור לאמצע */
+  gap: 0.5rem;                             /* ריווח בין אייקון לטקסט */
+}
+.store-logo:hover { color: #5441ba; }      /* צבע משתנה במעבר עכבר */
+
+/* --- סל קניות --- */
+.cart-btn {
+  background: linear-gradient(135deg, #fd52af 0%, #8ec5fc 100%);  /* רקע מדורג */
+  color: #fff;                               /* טקסט לבן */
+  border: none;                              /* בלי גבול */
+  border-radius: 30px;                       /* פינות עגולות מאוד */
+  padding: 0.6em 1.5em 0.6em 1em;            /* ריווח פנימי */
+  font-size: 1.1rem;                         /* גודל טקסט */
+  font-weight: bold;                         /* מודגש */
+  display: flex;                             /* שורה */
+  align-items: center;                       /* יישור לאמצע אנכית */
+  gap: 0.65em;                               /* רווח בין טקסט לאייקון */
+  cursor: pointer;                           /* יד עכבר */
+  box-shadow: 0 3px 14px #dfc6fa49;          /* צללת רכה */
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;  /* מעבר חלק */
+  outline: none;                             /* בלי מסגרת */
+  position: relative;                        /* מיקום אבסולוטי של בייג' */
+  overflow: visible;                         /* לא חותך אלמנטים פנימיים */
+}
+.cart-btn:hover, .cart-btn:focus {
+  background: linear-gradient(135deg, #8ec5fc 0%, #fd52af 100%); /* רקע מתהפך במעבר עכבר */
+  box-shadow: 0 7px 22px #b684d661;          /* צל גדול יותר */
+  transform: translateY(-2px) scale(1.03);   /* טיפה עולה וגדל */
+}
+
+/* עיגול קטן לספירת פריטים בסל */
+.cart-count {
+  background: #fff;                          /* רקע לבן */
+  color: #fd52af;                            /* מספר בצבע ורוד */
+  border-radius: 50%;                        /* עיגול מלא */
+  padding: 0.20em 0.62em;                    /* ריווח פנימי */
+  font-size: 1.03em;                         /* גודל */
+  font-weight: 700;                          /* מודגש */
+  min-width: 23px;                           /* מינימום רוחב */
+  text-align: center;                        /* מרכז טקסט */
+  margin-right: 0.12em;                      /* רווח מימין */
+  margin-left: 0.02em;                       /* רווח משמאל */
+  box-shadow: 0 1px 6px #f7e3ff7e;           /* צללת רכה */
+  border: 2px solid #f8f6fc;                 /* גבול דק ועדין */
+}
+/* משתמש מחובר */
+.user-avatar {
+  margin-left: 0px; /* לא צריך ריווח נוסף! */
+  display: inline-flex; /* מציג כאילו שורה אחת, גם גובה וגם רוחב */
+  align-items: center; /* יישור לאמצע אנכית */
+  justify-content: center; /* יישור אופקי */
+  background: linear-gradient(135deg, #8ec5fc 0%, #6c49ff 100%); /* רקע מדורג */
+  color: #fff; /* טקסט לבן */
+  border-radius: 50%; /* עיגול מלא */
+  width: 44px; /* גודל עיגול */
+  height: 44px;
+  font-size: 1.17rem; /* גודל אות */
+  font-weight: 700; /* אות עבה */
+  cursor: pointer; /* יד עכבר */
+  position: relative; /* מיקום אבסולוטי של בייג' */
+  transition: box-shadow 0.3s, background 0.23s; /* מעבר רך */
+  box-shadow: 0 2px 8px rgba(185, 147, 252, 0.3); /* צללת */
+  border: 2.2px solid #fff; /* גבול לבן */
+}
+.user-avatar:hover,
+.user-avatar.open {
+  background: linear-gradient(135deg, #6c49ff 0%, #8ec5fc 100%); /* היפוך צבע ברקע */
+  box-shadow: 0 6px 22px #a6c7fc57; /* צל יותר דומיננטי */
+}
+
+/* תפריט נפתח של המשתמש */
+.user-dropdown {
+  display: none; /* מוסתר ברירת מחדל */
+  position: absolute;
+  left: 0; /* פותח לשמאל */
+  top: 50px; /* מתחת לאווטאר */
+  min-width: 200px; /* רוחב מינימלי */
+  background: #fff; /* רקע לבן */
+  color: #26215c; /* צבע טקסט */
+  box-shadow: 0 8px 24px rgba(68, 136, 170, 0.18); /* צללת */
+  border-radius: 12px; /* עיגול פינות */
+  z-index: 90; /* מעל */
+  padding: 0.7em 0; /* ריווח פנימי */
+  font-size: 1rem; /* גודל טקסט */
+  text-align: right; /* יישור לימין */
+  animation: fadeIn 0.3s; /* אנימציית הופעה */
+  flex-direction: column; /* מסדר כפתורים בטור */
+  gap: 0.2em; /* רווח בין כפתורים */
+}
+/* הצגת הדרופדאון כאשר פתוח */
+.user-avatar.open .user-dropdown { display: flex; }
+/* עיצוב כפתור בדרופדאון */
+.user-dropdown button {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #5441ba;
+  font-size: 1em;
+  font-weight: 600;
+  text-align: right;
+  padding: 0.8em 1.1em;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.17s, color 0.17s;
+}
+.user-dropdown button:hover,
+.user-dropdown button:focus {
+  background: #f6f3fd; /* רקע סגלגל */
+  color: #fd52af; /* צבע ורוד */
+}
+.user-dropdown button:last-child {
+  color: #e02b2b; /* התנתקות - אדום */
+  font-weight: bold;
+}
+.user-dropdown button:last-child:hover,
+.user-dropdown button:last-child:focus {
+  background: #ffeaea; /* רקע אדמדם */
+  color: #fd5252; /* אדום בוהק */
+}
+
+/* חיפוש */
+.nav-search {
+  display: flex; /* הצגת input + אייקון בשורה */
+  align-items: center; /* יישור לאמצע אנכית */
+  background: #f8f6fc; /* רקע */
+  border-radius: 25px; /* עיגול */
+  padding: 0.2rem 1rem; /* ריווח */
+  box-shadow: 0 2px 8px rgba(225, 217, 251, 0.8); /* צללה */
+  transition: box-shadow 0.3s;
+}
+.nav-search:focus-within {
+  box-shadow: 0 2px 12px rgba(108, 73, 255, 0.3); /* הדגשה בעת פוקוס */
+}
+.nav-search input {
+  border: none; /* בלי גבול */
+  outline: none;
+  font-size: 1rem;
+  background: transparent;
+  padding: 0.4rem;
+  min-width: 150px;
+  color: #50288d;
+}
+.nav-search input::placeholder { color: #9d8dcf; } /* צבע טקסט רמז */
+
+/* תפריט קטגוריות */
+.menu {
+  display: flex; /* מסדר קטגוריות בשורה */
+  justify-content: center; /* מרכז */
+  gap: 2rem; /* רווח בין קטגוריות */
+  list-style: none; /* בלי בוליטים */
+  padding: 0.5rem 0; /* ריווח */
+  margin: 0;
+  flex-wrap: wrap; /* מעבר שורה בנייד */
+}
+.menu-item {
+  position: relative; /* דרופדאון */
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  color: #5441ba;
+  transition: all 0.3s;
+  background: transparent;
+}
+.menu-item:hover,
+.menu-item:focus-within {
+  background: linear-gradient(135deg, #ece6ff 0%, #f3f1fa 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(108, 73, 255, 0.2);
+}
+/* תפריט משנה */
+.submenu {
+  display: none;
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+  min-width: 160px;
+  box-shadow: 0 8px 24px rgba(68, 136, 170, 0.2);
+  border-radius: 12px;
+  z-index: 22;
+  overflow: hidden;
+}
+.menu-item.open .submenu {
+  display: block;
+  animation: fadeIn 0.3s;
+}
+.submenu-btn {
+  background: none;
+  border: none;
+  padding: 0.6rem 1rem;
+  text-align: right;
+  cursor: pointer;
+  color: #fff;
+  font-size: 0.95rem;
+  width: 100%;
+  transition: all 0.3s;
+  font-weight: 600;
+}
+.submenu-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(-2px);
+}
+/* מוצרים */
+main { /* אלמנט ראשי - אזור הצגת המוצרים */
+  max-width: 1200px;           /* מגביל רוחב ל-1200 פיקסל */
+  margin: auto;                /* מרכז את האלמנט בעמוד */
+  padding: 1rem 2vw 2rem 2vw;  /* ריווח פנימי מכל צד */
+}
+.products-title { /* כותרת אזור מוצרים */
+  font-size: 1.4rem;           /* גודל פונט */
+  margin: 1.5rem 0;            /* ריווח למעלה ולמטה */
+  color: #6c49ff;              /* צבע טקסט סגול */
+  font-weight: 600;            /* טקסט עבה */
+  text-align: center;          /* מיושר לאמצע */
+}
+.products-container { /* רשת כרטיסי מוצרים */
+  display: grid;                               /* מציג כרטיסים בגריד */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* מספר עמודות דינמי */
+  gap: 1.5rem;                                 /* רווח בין כרטיסים */
+  margin-top: 1.5rem;                          /* ריווח מלמעלה */
+}
+.product-card { /* עיצוב כרטיס מוצר */
+  background: #fff;                            /* רקע לבן */
+  border-radius: 15px;                         /* פינות עגולות */
+  box-shadow: 0 4px 20px rgba(185, 147, 252, 0.15); /* צללת רכה */
+  padding: 1.2rem;                             /* ריווח פנימי */
+  text-align: center;                          /* טקסט באמצע */
+  transition: all 0.3s;                        /* מעבר חלק */
+  display: flex;                               /* סידור תוכן בטור */
+  flex-direction: column;                      /* אלמנטים בטור */
+  align-items: center;                         /* מיושר לאמצע */
+  border: 1px solid rgba(108, 73, 255, 0.1);   /* גבול עדין */
+  position: relative;                          
+}
+.product-card:hover { /* אנימציה במעבר עכבר */
+  transform: translateY(-5px);                 /* עולה מעט */
+  box-shadow: 0 8px 30px rgba(185, 147, 252, 0.25); /* צל מוגבר */
+}
+.product-card a { /* קישור בכל כרטיס */
+  text-decoration: none;                       /* בלי קו תחתון */
+  color: inherit;                              /* צבע כמו טקסט רגיל */
+  width: 100%;                                 /* לוקח את כל הרוחב */
+}
+.product-card img { /* תמונת מוצר */
+  width: 100px;                                /* גודל תמונה */
+  height: 100px;
+  object-fit: contain;                         /* לא חותך את התמונה */
+  margin-bottom: 0.8rem;                       /* ריווח למטה */
+  border-radius: 12px;                         /* עיגול פינות */
+  background: #f8f6fc;                         /* רקע */
+  padding: 0.5rem;                             /* ריווח פנימי */
+  transition: transform 0.3s;                  /* מעבר חלק */
+}
+.product-card:hover img { /* אפקט hover על תמונה */
+  transform: scale(1.05);                      /* הגדלה קלה */
+}
+.product-title { /* שם המוצר */
+  font-size: 1rem;                             /* גודל טקסט */
+  margin: 0.2rem 0 0.5rem 0;                   /* ריווחים */
+  font-weight: 600;                            /* עבה */
+  color: #26215c;                              /* צבע טקסט */
+  white-space: nowrap;                         /* לא עובר שורה */
+  overflow: hidden;                            /* גוזר טקסט ארוך */
+  text-overflow: ellipsis;                     /* ... בסוף טקסט ארוך */
+  max-width: 100%;                             /* לא יוצא מהכרטיס */
+}
+.product-price { /* מחיר מוצר */
+  font-weight: 700;                            /* מודגש */
+  margin-bottom: 0.8rem;                       /* ריווח */
+  color: #fd52af;                              /* צבע ורוד */
+}
+/* מחיר מבצע */
+.product-price.promo {
+  color: #4caf50;                              /* ירוק */
+  font-weight: 700;
+}
+.original-price {
+  text-decoration: line-through;               /* קו על המחיר המקורי */
+  color: #999;                                 /* אפור */
+  font-weight: 400;
+  font-size: 0.85rem;
+  margin-left: 0.5rem;
+}
+/* באדג' קטן - תווית "מבצע" */
+.promo-badge {
+  position: absolute;                          /* ממוקם יחסית לכרטיס */
+  top: 10px;                                   /* ריווח מלמעלה */
+  left: 10px;                                  /* ריווח מצד שמאל */
+  background: #4caf50;                         /* ירוק */
+  color: white;                                /* טקסט לבן */
+  font-weight: 700;                            /* עבה */
+  font-size: 0.8rem;                           /* קטן */
+  padding: 0.25em 0.6em;                       /* ריווח פנימי */
+  border-radius: 20px;                         /* עיגול */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);       /* צללת */
+  user-select: none;                       
+  z-index: 5;                                  /* מעל תוכן אחר */
+}
+/* כפתור הוספה לסל */
+.add-to-cart-btn {
+  background: linear-gradient(135deg, #fd52af 0%, #8ec5fc 100%);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+}
+.add-to-cart-btn:hover {
+  background: linear-gradient(135deg, #8ec5fc 0%, #fd52af 100%);
+  transform: translateY(-1px);
+}
+
+/* כפתור "טען עוד מוצרים" */
+.load-more-btn {
+  background: linear-gradient(135deg, #6c49ff 0%, #8ec5fc 100%);
+  color: #fff;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 25px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 2rem auto;
+  display: block;
+  transition: all 0.3s;
+}
+.load-more-btn:hover {
+  background: linear-gradient(135deg, #8ec5fc 0%, #6c49ff 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(108, 73, 255, 0.3);
+}
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* קונטיינר של קרוסלה */
+.carousel-container {
+  overflow: hidden;
+  width: 100%;
+  max-width: 1200px;
+  margin: 1rem auto;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 4px 24px rgba(185, 147, 252, 0.3);
+  direction: rtl;
+}
+
+/* אנימציה של הסרט - גלילה אינסופית */
+@keyframes scroll-promo {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+/* תמונת לוגו */
+.logo-img {
+  width: 120px;              /* רוחב קבוע ללוגו */
+  height: 120px;             /* גובה קבוע ללוגו */
+  object-fit: contain;       /* התמונה תישאר בפרופורציה בלי להיחתך */
+  border-radius: 16px;       /* פינות עגולות ללוגו */
+  border: 2.5px solid #6c49ff; /* גבול דק בצבע סגול */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.13); /* צל עדין */
+  margin-right: 10px;        /* רווח מצד ימין (מרחיק מהאווטאר) */
+  cursor: pointer;           /* הופך ליד - לחיץ */
+  transition: transform .18s;/* מעבר חלק לסיבוב/הגדלה */
+}
+/* בעת מעבר עכבר, סיבוב קטן והגדלה קלה */
+.logo-img:hover {
+  transform: scale(1.03) rotate(-1.5deg); /* הגדלה קטנה + סיבוב */
+}
+
+/* תגית "מבצע" בפינה - זקוק ל-relative באבא! */
+
+.product-card {
+  position: relative;      /* משמש כ"נקודת יחוס" לכל אלמנט absolute בתוכו  */
+  /* ...שאר עיצוב... */
+}
+
+
+.sale-animation {
+  position: absolute;          /* מציב את הקופסה הזו בנקודה מסוימת */
+  top: 15px;                   /* 15px מהחלק העליון של האלמנט האב (promo-container) */
+  right: 15px;                 /* 15px מהחלק הימני */
+  z-index: 10;                 /* שכבה גבוהה יחסית */
+  background: rgba(255, 255, 255, 0.9); /* רקע לבן חצי שקוף */
+  border-radius: 12px;         /* עיגול פינות */
+  padding: 8px;                /* ריווח פנימי */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3); /* צללה */
+}
+
+
+.sale-animation img {
+  width: 100px;
+  height: auto;
+  display: block;
+  animation: saleShake 2s infinite; /* רועד בלולאה */
+}
+
+/* KEYFRAMES - שליטה באנימציות */
+@keyframes saleShake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }    /* מצב רגיל */
+  25% { transform: translateX(-8px) rotate(-2deg); }     /* זז שמאלה, סיבוב שמאלה */
+  50% { transform: translateX(0) rotate(0deg); }         /* חוזר לאמצע */
+  75% { transform: translateX(8px) rotate(2deg); }       /* זז ימינה, סיבוב ימינה */
+}
+
+/* פוטר */
+footer {
+  background: linear-gradient(90deg, #e0c3fc 0%, #8ec5fc 100%);
+  color: #6c49ff;
+  font-weight: 600;
+  text-align: center;
+  padding: 2.2em 1em 1.3em 1em;
+  border-radius: 24px 24px 0 0; /* פינות עליונות עגולות */
+  font-size: 1.08rem;
+  letter-spacing: 0.03em;
+  box-shadow: 0 -2px 16px #b993fc2e;
+  margin: 2em auto 0 auto;
+  max-width: 900px;
+  transition: box-shadow 0.18s;
+  position: relative; 
+  z-index: 3;         /* מעל חלק מהדברים האחרים */
+}
+footer b {
+  color: #5441ba;
+  background: #fff;
+  border-radius: 9px;
+  padding: 0.13em 0.65em;
+  font-size: 1.01em;
+  margin: 0 0.12em;
+  box-shadow: 0 1px 5px #f7e3ff2a;
+  font-weight: 700;
+}
+footer a {
+  color: #fd52af;
+  text-decoration: none;
+  font-weight: 700;
+  margin-right: 0.24em;
+  transition: color 0.2s;
+}
+footer a:hover, footer a:focus {
+  color: #6c49ff;
+  text-decoration: underline;
+}
+footer::before {
+  content: "📬";
+  font-size: 1.65em;
+  display: block;
+  margin-bottom: 0.18em;
+  opacity: 0.72;
+}
+
+.login-btn {
+  background: linear-gradient(135deg, #6c49ff 0%, #8ec5fc 100%); /* מעבר צבעים כחול-סגול */
+  color: #fff;                         /* טקסט לבן */
+  border: none;                        /* בלי גבול */
+  border-radius: 25px;                 /* פינות עגולות */
+  padding: 0.6em 1.5em;                /* ריווח פנימי אופקי ואנכי */
+  font-size: 1rem;                     /* גודל טקסט רגיל */
+  font-weight: 600;                    /* טקסט עבה */
+  cursor: pointer;                     /* מצביע יד בעת ריחוף */
+  transition: all 0.3s;                /* מעבר חלק לכל תכונה */
+  box-shadow: 0 3px 14px rgba(108, 73, 255, 0.3); /* צל עדין */
+}
+
+.login-btn:hover {
+  background: linear-gradient(135deg, #8ec5fc 0%, #6c49ff 100%); /* שינוי כיוון מעבר צבע */
+  transform: translateY(-2px);                                  /* מזיז מעט למעלה */
+  box-shadow: 0 6px 20px rgba(108, 73, 255, 0.4);               /* הצללה מודגשת */
+}
+
+/* פופאפ התחברות – שכבת רקע */
+.login-popup-bg {
+  position: fixed;                     /* צמוד לחלון הדפדפן תמיד */
+  top: 0;
+  left: 0;
+  width: 100%;                         /* מכסה את כל הרוחב */
+  height: 100%;                        /* מכסה את כל הגובה */
+  background: rgba(0, 0, 0, 0.5);      /* רקע כהה חצי שקוף */
+  display: flex;                       /* מרכז את התוכן */
+  justify-content: center;             /* באמצע לרוחב */
+  align-items: center;                 /* באמצע לגובה */
+  z-index: 1000;                       /* מעל כל שאר התוכן */
+}
+
+/* תוכן הפופאפ עצמו */
+.login-popup-inner {
+  background: white;                   /* רקע לבן */
+  padding: 2rem;                       /* ריווח פנימי */
+  border-radius: 15px;                 /* פינות עגולות */
+  text-align: center;                  /* מיושר לאמצע */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); /* צל מודגש */
+  max-width: 400px;                    /* מגביל רוחב */
+  width: 90%;                          /* כמעט כל הרוחב במובייל */
+}
+
+.login-popup-inner h3 {
+  color: #6c49ff;                      /* כותרת בצבע סגול */
+  margin-bottom: 1rem;                 /* ריווח למטה */
+}
+
+/* כפתור בפופאפ */
+.login-popup-inner button {
+  background: linear-gradient(135deg, #6c49ff 0%, #8ec5fc 100%);
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 25px;
+  margin: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+/* אפקט מעבר לכפתור בפופאפ */
+.login-popup-inner button:hover {
+  transform: translateY(-2px);                   /* זז מעט למעלה */
+  box-shadow: 0 4px 15px rgba(108, 73, 255, 0.3);/* צל */
+}
+
+/* כפתור "סגור" בפופאפ */
+.login-popup-inner .close-btn {
+  background: #999 !important;                   /* רקע אפור */
+}
+.login-popup-inner .close-btn:hover {
+  background: #777 !important;                   /* רקע כהה יותר בעת ריחוף */
+}
+
+/* אפקט fadeIn – מעבר הדרגתי בכניסה */
+@keyframes fadeIn {
+  from {
+    opacity: 0;                                 /* מתחיל שקוף */
+    transform: translateY(-10px);               /* קצת למעלה */
+  }
+  to {
+    opacity: 1;                                 /* גמור אטום */
+    transform: translateY(0);                   /* במקום הרגיל */
+  }
+}
+/* --- סליידר/קרוסלת מבצעים --- */
+
+/* קונטיינר חיצוני */
+.promo-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 1200px;
+  margin: 2rem auto;
+  border-radius: 18px;
+  background: #ffffffdd;
+  box-shadow: 0 4px 24px rgba(185, 147, 252, 0.3);
+  direction: ltr;
+  min-height: 140px;
+}
+
+/* מסילה אופקית של כרטיסים */
+.promo-slider {
+  display: flex;
+  animation: scroll-promo 20s linear infinite;
+  width: fit-content;
+}
+
+/* כרטיס בודד */
+.promo-item {
+  display: inline-block;
+  width: 200px;
+  margin: 0.5rem;
+  background: linear-gradient(135deg, #e0ffe0 0%, #c8f5c8 100%);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.13);
+  text-align: center;
+  vertical-align: top;
+  flex-shrink: 0;
+  position: relative; /* ל-badge */
+}
+
+/* תמונת מוצר (לשינוי עיגול/ריבוע – להוסיף קלאס נוסף אם רוצים) */
+.promo-item img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  border-radius: 10px;       /* אפשר לעגל יותר אם רוצים עיגול */
+  margin-bottom: 0.4rem;
+  background: #f8f6fc;
+  padding: 0.3rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* וריאציה לתמונה עגולה (אם רוצים אייקון/לוגו) */
+.promo-item .circle-img {
+  border-radius: 50% !important;
+  padding: 0 !important;
+}
+
+/* תגית "מבצע" על הכרטיס */
+.promo-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #4caf50;
+  color: white;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.25em 0.6em;
+  border-radius: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  user-select: none;
+  z-index: 5;
+}
+/* תגית "מבצע" ימנית ל-banner */
+.promo-badge.banner {
+  top: 8px;
+  right: 8px;
+  left: auto;
+  background: #388e3c;
+  font-size: 0.75rem;
+  padding: 0.2em 0.5em;
+  border-radius: 15px;
+}
+
+/* כותרת, מחיר, מחיר מקורי */
+.promo-title {
+  font-weight: 700;
+  color: #2e7d32;
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+  white-space: normal;
+  height: 2em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.promo-price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #4caf50;
+  margin-bottom: 0.2rem;
+}
+.promo-original-price {
+  font-size: 0.85rem;
+  color: #999;
+  text-decoration: line-through;
+  margin-bottom: 0.4rem;
+}
+
+/* אנימציית סליידר */
+@keyframes scroll-promo {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
