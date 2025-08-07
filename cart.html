@@ -527,6 +527,7 @@ async function checkout() {
   const sumEl = document.getElementById('paySum');
   const methodEl = document.querySelector('input[name="pay-method"]:checked');
   const addressEl = document.getElementById('orderAddress');
+  const cardInput = document.getElementById('creditCardNumber');
 
   const sum = sumEl ? sumEl.textContent : '$0.00';
   const method = methodEl ? methodEl.value : 'credit';
@@ -534,6 +535,7 @@ async function checkout() {
   const user = getCurrentUser();
   const orderAddress = (addressEl?.value || user.address || '').trim();
 
+  // בדיקות בסיסיות
   if (!cart.length) {
     alert("העגלה ריקה, אין מה לשלם.");
     return;
@@ -543,12 +545,18 @@ async function checkout() {
     return;
   }
   if (!orderAddress) {
-    alert("חובה למלא כתובת למשלוח על מנת לבצע הזמנה.");
+    alert("חובה למלא כתובת למשלוח.");
     addressEl?.focus();
     return;
   }
+  // בדיקה פשוטה למספר כרטיס אשראי אם בחר אשראי
+  if (method === 'credit' && !cardInput.value.trim()) {
+    alert("חובה להזין מספר כרטיס אשראי.");
+    cardInput.focus();
+    return;
+  }
 
-  // בניית אובייקט הזמנה חדשה
+  // בניית אובייקט הזמנה
   const newOrder = {
     orderId: "ORDER_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10),
     date: new Date().toISOString(),
@@ -571,13 +579,13 @@ async function checkout() {
     const userIndex = users.findIndex(u => u.username === user.username);
     if (userIndex === -1) throw new Error("לא נמצא משתמש מחובר ב־BIN");
 
-    // הוספת ההזמנה החדשה, איפוס סל ושעת עדכון
+    // הוספת ההזמנה החדשה ואיפוס העגלה
     if (!Array.isArray(users[userIndex].orders)) users[userIndex].orders = [];
     users[userIndex].orders.push(newOrder);
     users[userIndex].cart = [];
     users[userIndex].cartUpdatedAt = Date.now();
 
-    // שמירה מחודשת ל־BIN
+    // שמירה חזרה ל־BIN
     const saveRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
       method: "PUT",
       headers: {
@@ -588,12 +596,12 @@ async function checkout() {
     });
     if (!saveRes.ok) throw new Error(`שגיאה בשמירה ל־BIN: ${saveRes.status}`);
 
-    // עדכון מקומי + שידור שינוי לכל הדפים
-    setCurrentUser(users[userIndex]);           // מעדכן את המשתמש המקומי (כולל עגלה ריקה)
-    localStorage.setItem('cart', '[]');         // תאימות לקוד ישן אם השתמשת ב-'cart' גלובלי
-    localStorage.setItem('lastCartChange', String(Date.now())); // ← מפעיל storage event בלשוניות אחרות
+    // עדכון מקומי
+    setCurrentUser(users[userIndex]);
+    localStorage.setItem('cart', '[]');
+    localStorage.setItem('lastCartChange', String(Date.now()));
 
-    // רענון UI מקומי
+    // רענון תצוגה
     renderCart();
     updateCartCount();
     const badge = document.getElementById('cartCount');
@@ -606,6 +614,7 @@ async function checkout() {
     console.error("❌ שגיאה:", err);
   }
 }
+
 
 
     // --- פונקציה לסנכרון עם BIN (שמירה/שליפה לעדכון עגלות) ---
@@ -657,3 +666,4 @@ async function checkout() {
 
 
 </html>
+
