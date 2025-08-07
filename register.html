@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>הרשמה | חנות דיגיטלית</title>
+  <style>
+    /* עיצוב רקע הדף ומרכזת את הקופסה באמצע המסך */
+    body {
+      background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      direction: rtl;
+    }
+    /* עיצוב קופסת ההרשמה */
+    .register-container {
+      background: #fff;
+      border-radius: 22px;
+      box-shadow: 0 4px 40px #b993fc44;
+      padding: 2.2em 2em 2em 2em;
+      max-width: 370px;
+      width: 98vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    /* כותרת ראשית */
+    h2 {
+      color: #6c49ff;
+      margin-bottom: 1.2em;
+      font-weight: 800;
+      font-size: 2em;
+      letter-spacing: 1px;
+    }
+    /* עיצוב תווית (label) */
+    label {
+      display: block;
+      margin-bottom: 0.5em;
+      color: #26215c;
+      font-weight: bold;
+      font-size: 1.1em;
+      margin-top: 1em;
+    }
+    /* עיצוב שדות הקלט */
+    input[type="text"], input[type="email"], input[type="password"] {
+      width: 100%;
+      padding: 0.6em 0.9em;
+      border: 1.5px solid #cfc4f7;
+      border-radius: 13px;
+      font-size: 1em;
+      background: #f8f6fc;
+      margin-bottom: 0.2em;
+      transition: border-color 0.2s;
+    }
+    /* הדגשת שדה בעת פוקוס */
+    input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+      border-color: #6c49ff;
+      outline: none;
+      background: #f3f1fa;
+    }
+    /* עיצוב כפתור הרשמה */
+    .register-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #6c49ff 0%, #8ec5fc 100%);
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      padding: 0.6em 0;
+      border-radius: 20px;
+      font-size: 1.1em;
+      cursor: pointer;
+      margin-top: 1.5em;
+      transition: background 0.3s;
+    }
+    .register-btn:hover {
+      background: linear-gradient(135deg, #8ec5fc 0%, #6c49ff 100%);
+    }
+    /* קישור לעמוד התחברות */
+    .login-link {
+      color: #fd52af;
+      text-align: center;
+      display: block;
+      margin-top: 1.2em;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    /* הודעת שגיאה */
+    .error-msg {
+      color: #fd52af;
+      font-weight: bold;
+      margin-top: 1em;
+      text-align: center;
+      font-size: 1.08em;
+      display: none;
+    }
+    /* הודעת הצלחה */
+    .success-msg {
+      color: #27af61;
+      font-weight: bold;
+      margin-top: 1em;
+      text-align: center;
+      font-size: 1.1em;
+      display: none;
+    }
+    /* רספונסיביות לנייד */
+    @media (max-width:500px){
+      .register-container { padding: 1em 0.3em; }
+    }
+  </style>
+</head>
+<body>
+  <!-- קופסת טופס הרשמה -->
+  <div class="register-container">
+    <h2>הרשמה</h2>
+    <form id="registerForm" autocomplete="off">
+      <label for="username">שם משתמש:</label>
+      <input type="text" id="username" required />
+
+      <label for="email">מייל:</label>
+      <input type="email" id="email" required />
+
+      <label for="address">כתובת למשלוח:</label>
+      <input type="text" id="address" required />
+
+      <label for="password">סיסמה:</label>
+      <input type="password" id="password" required />
+
+      <button type="submit" class="register-btn">הירשם</button>
+      <!-- הודעת שגיאה (מוסתרת כברירת מחדל) -->
+      <div class="error-msg" id="errorMsg"></div>
+      <!-- הודעת הצלחה (מוסתרת כברירת מחדל) -->
+      <div class="success-msg" id="successMsg"></div>
+    </form>
+    <!-- קישור לעמוד התחברות -->
+    <a class="login-link" href="login.html">יש לך כבר חשבון? להתחברות לחץ כאן</a>
+  </div>
+
+  <script>
+    // מזהה BIN וה-API KEY (לעבודה עם JSONBin לשמירת המשתמשים)
+    const BIN_ID = '687d68e6fdac391a2ff106cd';
+    const API_KEY = '$2a$10$jUdVbRFsQ.nFPu9sdEhLGuFKyLKnsopNmK7f9K2anJSQ3noWGvHMq';
+
+    // פונקציה לשליפת כל המשתמשים הקיימים מהשרת (BIN)
+    async function getAllUsers() {
+      const res = await fetch('https://api.jsonbin.io/v3/b/' + BIN_ID + '/latest', {
+        headers: { 'X-Master-Key': API_KEY }
+      });
+      const data = await res.json();
+      return data.record.users || [];
+    }
+
+    // פונקציה לשמירת מערך המשתמשים המעודכן אל BIN
+    async function saveUsers(users) {
+      await fetch('https://api.jsonbin.io/v3/b/' + BIN_ID, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': API_KEY
+        },
+        body: JSON.stringify({ users })
+      });
+    }
+
+    // שליחת טופס הרשמה (אירוע submit)
+    document.getElementById('registerForm').onsubmit = async function(e) {
+      e.preventDefault(); // לא מרענן דף
+      document.getElementById('errorMsg').style.display = "none";
+      document.getElementById('successMsg').style.display = "none";
+
+      // שליפת ערכים מהשדות
+      let username = document.getElementById('username').value.trim();
+      let email = document.getElementById('email').value.trim();
+      let address = document.getElementById('address').value.trim();
+      let password = document.getElementById('password').value;
+
+      // בדיקה שכל השדות מלאים
+      if (!username || !email || !address || !password) {
+        document.getElementById('errorMsg').textContent = "יש למלא את כל השדות";
+        document.getElementById('errorMsg').style.display = "block";
+        return;
+      }
+
+      // כפתור "טוען..."
+      document.querySelector('.register-btn').disabled = true;
+      document.querySelector('.register-btn').textContent = "טוען...";
+
+      // שליפת כל המשתמשים הקיימים מהשרת
+      let users = await getAllUsers();
+
+      // בדיקה אם שם המשתמש כבר קיים
+      if (users.find(u => u.username === username)) {
+        document.getElementById('errorMsg').textContent = "שם המשתמש כבר קיים במערכת";
+        document.getElementById('errorMsg').style.display = "block";
+        document.querySelector('.register-btn').disabled = false;
+        document.querySelector('.register-btn').textContent = "הירשם";
+        return;
+      }
+
+      // יצירת אובייקט משתמש חדש (רשומה חדשה)
+      let newUser = {
+        username,
+        email,
+        address,
+        password,
+        cart: [],     // עגלה ריקה
+        orders: []    // אין הזמנות עדיין
+      };
+
+      users.push(newUser); // הוספת המשתמש החדש למערך
+
+      await saveUsers(users); // שמירה ל-BIN
+
+      // הצגת הודעת הצלחה
+      document.getElementById('successMsg').textContent = "נרשמת בהצלחה! מעביר אותך להתחברות...";
+      document.getElementById('successMsg').style.display = "block";
+      document.querySelector('.register-btn').disabled = true;
+
+      // המתנה קצרה ואז הפנייה לדף התחברות
+      setTimeout(() => {
+        window.location = "login.html";
+      }, 1800);
+    };
+  </script>
+</body>
+</html>

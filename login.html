@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>התחברות | חנות דיגיטלית</title>
+  <style>
+    body {
+      background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      direction: rtl;
+    }
+    .login-container {
+      background: #fff;
+      border-radius: 22px;
+      box-shadow: 0 4px 40px #b993fc44;
+      padding: 2.2em 2em 2em 2em;
+      max-width: 340px;
+      width: 98vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h2 {
+      color: #6c49ff;
+      margin-bottom: 1.2em;
+      font-weight: 800;
+      font-size: 2em;
+      letter-spacing: 1px;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5em;
+      color: #26215c;
+      font-weight: bold;
+      font-size: 1.1em;
+      margin-top: 1em;
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 0.6em 0.9em;
+      border: 1.5px solid #cfc4f7;
+      border-radius: 13px;
+      font-size: 1em;
+      background: #f8f6fc;
+      margin-bottom: 0.2em;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus, input[type="password"]:focus {
+      border-color: #6c49ff;
+      outline: none;
+      background: #f3f1fa;
+    }
+    .login-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #6c49ff 0%, #8ec5fc 100%);
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      padding: 0.6em 0;
+      border-radius: 20px;
+      font-size: 1.1em;
+      cursor: pointer;
+      margin-top: 1.5em;
+      transition: background 0.3s;
+    }
+    .login-btn:hover {
+      background: linear-gradient(135deg, #8ec5fc 0%, #6c49ff 100%);
+    }
+    .register-link {
+      color: #fd52af;
+      text-align: center;
+      display: block;
+      margin-top: 1.2em;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .error-msg {
+      color: #fd52af;
+      font-weight: bold;
+      margin-top: 1em;
+      text-align: center;
+      font-size: 1.08em;
+      display: none;
+    }
+    @media (max-width:500px){
+      .login-container { padding: 1em 0.3em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>התחברות</h2>
+    <form id="loginForm" autocomplete="off">
+      <label for="username">שם משתמש:</label>
+      <input type="text" id="username" required autocomplete="username" />
+
+    <label for="password">סיסמה:</label>
+<div style="position:relative; width:100%;">
+  <input type="password" id="password" required autocomplete="current-password"
+    style="padding-left:40px;"/>
+  <button type="button" id="togglePassword"
+    style="position:absolute; left:7px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.3em;">👁️</button>
+</div>
+
+
+      <button type="submit" class="login-btn">התחבר</button>
+      <div class="error-msg" id="errorMsg"></div>
+    </form>
+    <a class="register-link" href="register.html">עדיין אין לך חשבון? להרשמה לחץ כאן</a>
+  </div>
+
+<script>
+const BIN_ID = '687d68e6fdac391a2ff106cd';
+const API_KEY = '$2a$10$jUdVbRFsQ.nFPu9sdEhLGuFKyLKnsopNmK7f9K2anJSQ3noWGvHMq';
+
+// שליפת כל המשתמשים
+async function getAllUsers() {
+  try {
+    const res = await fetch('https://api.jsonbin.io/v3/b/' + BIN_ID + '/latest', {
+      headers: { 'X-Master-Key': API_KEY }
+    });
+    const data = await res.json();
+    return data.record && Array.isArray(data.record.users) ? data.record.users : [];
+  } catch (err) {
+    return null; // במידה ויש כשל ברשת או גישה
+  }
+}
+
+// התחברות משתמש
+async function loginUser(username, password) {
+  if (!username || !password) return {ok:false, msg:"יש למלא את כל השדות"};
+  let users = await getAllUsers();
+  if (!users) return {ok:false, msg:"שגיאה בגישה לשרת. נסה שנית מאוחר יותר"};
+  if (!users.length) return {ok:false, msg:"אין משתמשים רשומים. יש להירשם תחילה"};
+  let found = users.find(u => u.username === username && u.password === password);
+  if (found) {
+    // שמירה לכל הדפים
+localStorage.setItem('user', JSON.stringify(found));
+    return {ok:true};
+  } else {
+    return {ok:false, msg:"שם משתמש או סיסמה שגויים"};
+  }
+}
+
+// טיפול בשליחת טופס
+document.getElementById('loginForm').onsubmit = async function(e){
+  e.preventDefault();
+  document.getElementById('errorMsg').style.display = "none";
+  let username = document.getElementById('username').value.trim();
+  let password = document.getElementById('password').value;
+  document.querySelector('.login-btn').disabled = true;
+  document.querySelector('.login-btn').textContent = "טוען...";
+
+  let result = await loginUser(username, password);
+  if(result.ok){
+    window.location = "index.html";
+  } else {
+    document.getElementById('errorMsg').textContent = result.msg;
+    document.getElementById('errorMsg').style.display = "block";
+    document.querySelector('.login-btn').disabled = false;
+    document.querySelector('.login-btn').textContent = "התחבר";
+  }
+};
+// קוד הצגת/הסתרת הסיסמה
+document.getElementById('togglePassword').onclick = function() {
+  const pwdInput = document.getElementById('password');
+  if (pwdInput.type === "password") {
+    pwdInput.type = "text";
+    this.textContent = "🙈";
+  } else {
+    pwdInput.type = "password";
+    this.textContent = "👁️";
+  }
+};
+
+</script>
+
+</body>
+</html>

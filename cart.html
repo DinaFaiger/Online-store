@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="he">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>סל קניות</title>
+  <style>
+    /* עיצוב בסיסי לכל הדף: גופן, כיוון, רקע צבעוני */
+    body {
+      font-family: Arial, sans-serif;
+      direction: rtl;
+      background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
+      margin: 0;
+    }
+
+    /* עיצוב הקונטיינר של הסל */
+    .container {
+      max-width: 650px;
+      margin: 2.5em auto 1.5em auto;
+      background: #fff;
+      border-radius: 21px;
+      box-shadow: 0 8px 48px #b993fc3a;
+      padding: 2.1em 1.2em 2.2em 1.2em;
+      min-height: 300px;
+      position: relative;
+    }
+
+    /* כותרת ראשית */
+    h2 {
+      margin-bottom: 1.2em;
+      color: #6c49ff;
+      font-size: 1.6em;
+      letter-spacing: 0.01em;
+      text-align: center;
+    }
+
+    /* כפתור חזרה */
+    .back-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ece6ff;
+      color: #6c49ff;
+      border: none;
+      border-radius: 18px;
+      padding: 0.36em 1.15em 0.36em 1em;
+      font-size: 1.06em;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 1px 7px #b993fc1a;
+      transition: background .15s, color .15s, box-shadow .16s;
+    }
+
+    .back-btn:hover {
+      background: #fd52af;
+      color: #fff;
+      box-shadow: 0 2px 14px #b993fc3a;
+    }
+
+    /* טבלת סל הקניות */
+    .cart-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 14px;
+    }
+
+    /* שורת פריט בסל */
+    .cart-item-row {
+      background: #f7f2ff;
+      border-radius: 16px;
+      box-shadow: 0 2px 14px #b993fc24;
+      transition: box-shadow .14s, transform .13s;
+      vertical-align: middle;
+    }
+
+    .cart-item-row:hover {
+      box-shadow: 0 4px 32px #ae9fff36;
+      transform: scale(1.017);
+    }
+
+    /* תמונת מוצר בסל */
+    .cart-thumb {
+      width: 56px;
+      height: 56px;
+      object-fit: cover;
+      border-radius: 13px;
+      box-shadow: 0 2px 7px #e0c3fc26;
+      margin: 0 7px;
+    }
+
+    /* כותרת מוצר */
+    .cart-item-title {
+      font-size: 1.07em;
+      font-weight: 500;
+      color: #5441ba;
+    }
+
+    /* שדה כמות */
+    .cart-qty {
+      width: 2.7em;
+      padding: 0.2em 0.1em;
+      border: 1.5px solid #b993fc;
+      border-radius: 7px;
+      font-size: 1.08em;
+      text-align: center;
+      margin: 0 6px;
+      background: #f3f1fa;
+      color: #26215c;
+      transition: border .12s;
+    }
+
+    .cart-qty:focus {
+      border: 2.5px solid #fd52af;
+    }
+
+    /* מחיר מוצר */
+    .cart-price {
+      font-size: 1.09em;
+      color: #fd52af;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    /* כפתור הסרה */
+    .remove-btn {
+      background: #fd52af;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 0.37em 1.13em;
+      font-size: 0.97em;
+      cursor: pointer;
+      transition: background .16s, color .13s, box-shadow .16s;
+      box-shadow: 0 2px 6px #b993fc25;
+      margin-right: 0.2em;
+    }
+
+    .remove-btn:hover {
+      background: #fff;
+      color: #fd52af;
+      border: 1.5px solid #fd52af;
+    }
+
+    /* הודעה כאשר העגלה ריקה */
+    .cart-empty {
+      padding: 2.4em 0 2.1em 0;
+      text-align: center;
+      font-size: 1.15em;
+      color: #7864ad;
+      opacity: .89;
+    }
+
+    /* סך הכל מחיר */
+    .cart-total {
+      margin-top: 2em;
+      font-size: 1.23em;
+      font-weight: bold;
+      color: #2c1867;
+      background: #ece6ff;
+      padding: 1em 1.3em;
+      border-radius: 13px;
+      text-align: center;
+      box-shadow: 0 1px 7px #b993fc1a;
+      letter-spacing: 0.03em;
+    }
+
+    /* אזור תשלום */
+    .pay-methods {
+      margin-top: 2.5em;
+      text-align: center;
+    }
+
+    .pay-methods h3 {
+      color: #6c49ff;
+      margin-bottom: 1.1em;
+      font-size: 1.2em;
+      letter-spacing: 0.04em;
+    }
+
+    .pay-options {
+      display: flex;
+      justify-content: center;
+      gap: 2em;
+      flex-wrap: wrap;
+      margin-bottom: 1.2em;
+    }
+
+    .pay-options label {
+      cursor: pointer;
+      font-size: 1.09em;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0.25em 0.4em;
+      border-radius: 13px;
+      transition: background 0.16s;
+    }
+
+    .pay-options label:hover {
+      background: #f3f1fa;
+    }
+
+    .pay-options img {
+      width: 38px;
+      vertical-align: middle;
+    }
+
+    /* סכום לתשלום */
+    .pay-sum {
+      margin-top: 1em;
+      font-size: 1.17em;
+      color: #2c1867;
+    }
+
+    .pay-sum span {
+      color: #2262f1;
+      font-weight: bold;
+      margin-right: 0.2em;
+    }
+
+    /* כפתור תשלום */
+    .checkout-btn {
+      display: block;
+      margin: 2.4em auto 0 auto;
+      background: linear-gradient(90deg, #fd52af 0%, #8ec5fc 100%);
+      color: #fff;
+      border: none;
+      padding: 0.85em 3.7em;
+      border-radius: 25px;
+      font-size: 1.15em;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 12px #b993fc39;
+      transition: background .17s, transform .13s;
+    }
+
+    .checkout-btn:hover {
+      background: linear-gradient(90deg, #8ec5fc 0%, #fd52af 100%);
+      transform: scale(1.03) translateY(-2px);
+    }
+
+    /* הודעת הצלחה */
+    .success-msg {
+      margin-top: 1.5em;
+      color: #27af61;
+      background: #e0faef;
+      border-radius: 13px;
+      padding: 1em 0;
+      text-align: center;
+      font-size: 1.09em;
+      font-weight: bold;
+      box-shadow: 0 2px 8px #b993fc18;
+    }
+
+    /* אזור כתובת למשלוח */
+    .cart-address {
+      margin-bottom: 1em;
+    }
+
+    .cart-address label {
+      font-weight: 600;
+      color: #6c49ff;
+    }
+
+    .cart-address input {
+      margin-right: 0.5em;
+      padding: 0.4em 0.7em;
+      font-size: 1em;
+      border-radius: 8px;
+      border: 1.5px solid #b993fc;
+      width: 70%;
+    }
+
+    .cart-address input:focus {
+      border-color: #fd52af;
+    }
+
+    .cart-address .note {
+      color: #888;
+      font-size: 0.92em;
+    }
+
+    /* --- עיצוב לחלון הצלחה קופץ --- */
+    #orderSuccessModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 999;
+      background: rgba(50, 40, 100, 0.18);
+      align-items: center;
+      justify-content: center;
+    }
+
+    #orderSuccessModal .success-content {
+      background: #e0faef;
+      color: #23aa63;
+      border-radius: 18px;
+      padding: 2em 2.6em;
+      box-shadow: 0 3px 24px #b993fc38;
+      text-align: center;
+      font-size: 1.18em;
+      font-weight: bold;
+      min-width: 230px;
+      max-width: 85vw;
+    }
+
+    #orderSuccessModal .success-close-btn {
+      background: #23aa63;
+      color: #fff;
+      font-size: 1.07em;
+      padding: 0.65em 2em;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #b993fc18;
+      margin-top: 1em;
+    }
+
+    #orderSuccessModal .success-close-btn:hover {
+      background: #1c8e53;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- קונטיינר ראשי של סל הקניות -->
+  <div class="container" id="cartBox">
+    <button class="back-btn" onclick="goBack()">← חזרה</button>
+  </div>
+  <!-- הודעת הצלחה (מוסתרת כברירת מחדל) -->
+  <div id="successMsg" class="success-msg" style="display:none;"></div>
+
+  <!-- מודל קופץ (חלון צף) להצלחה ברכישה -->
+  <div id="orderSuccessModal">
+    <div class="success-content">
+      <span id="orderSuccessText"></span>
+      <br><br>
+      <button onclick="hideOrderSuccessModal()" class="success-close-btn">סגור</button>
+    </div>
+  </div>
+
+  <script>
+    // ----------- קביעת מזהה BIN ומפתח API לשמירה/שליפה מהשרת -----------
+    const BIN_ID = "687d68e6fdac391a2ff106cd";
+    const API_KEY = "$2a$10$jUdVbRFsQ.nFPu9sdEhLGuFKyLKnsopNmK7f9K2anJSQ3noWGvHMq";
+
+    // ------- פונקציות ניהול משתמש ועגלה --------
+
+    // שליפת המשתמש המחובר מה־localStorage
+    function getCurrentUser() {
+      try { return JSON.parse(localStorage.getItem('user') || '{}'); }
+      catch { return {}; }
+    }
+    // שמירת אובייקט המשתמש ב־localStorage
+    function setCurrentUser(user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+    // שליפת העגלה של המשתמש
+    function getUserCart() {
+      let user = JSON.parse(localStorage.getItem('user') || '{}');
+      return Array.isArray(user.cart) ? user.cart : [];
+    }
+    // שמירת עגלה ב־localStorage תחת המשתמש
+    function setUserCart(cart) {
+      let user = getCurrentUser();
+      user.cart = cart;
+      user.cartUpdatedAt = Date.now(); // תיעוד זמן עדכון אחרון לעגלה
+      setCurrentUser(user);
+    }
+    // פונקציה לחזרה לעמוד הקודם בדפדפן
+    function goBack() { window.history.back(); }
+    // עדכון מונה העגלה (לשימוש בעתיד, לא חובה לעמוד הזה)
+    function updateCartCount() {
+      let count = 0;
+      if (localStorage.getItem('user')) {
+        let user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (Array.isArray(user.cart)) {
+          count = user.cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+        }
+      } else {
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        count = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+      }
+      var el = document.getElementById('cartCount');
+      if (el) el.textContent = count;
+    }
+
+    // הצגת עגלת הקניות (רנדרינג לדף)
+    function renderCart() {
+      const cartBox = document.getElementById('cartBox');
+      let cart = getUserCart();
+
+      // אם העגלה ריקה, מציג הודעה מתאימה
+      if (!cart || cart.length === 0) {
+        cartBox.innerHTML = `
+          <button class="back-btn" onclick="goBack()">← חזרה</button>
+          <h2>סל הקניות שלך</h2>
+          <div class="cart-empty">העגלה ריקה</div>
+          ${renderPaymentBlock(0)}
+        `;
+        updateCartCount();
+        return;
+      }
+
+      // סכום כולל לתשלום
+      let totalUSD = 0;
+      // בניית שורות מוצרים לטבלה
+let rows = cart.map(item => {
+  let sum = (item.price * item.quantity);
+  totalUSD += sum;
+  return `
+    <tr class="cart-item-row">
+      <td><img src="${item.thumbnail}" class="cart-thumb" /></td>
+      <td class="cart-item-title">${item.title}</td>
+      <td><b>${item.id}</b></td>
+      <td><input type="number" class="cart-qty" value="${item.quantity}" min="1"
+           onchange="updateQty('${item.id}', this.value)" /></td>
+      <td class="cart-price">$${item.price.toFixed(2)}</td>
+      <td>
+        <button class="remove-btn" onclick="removeFromCart('${item.id}')">הסר</button>
+      </td>
+    </tr>
+  `;
+}).join('');
+
+
+      // רנדרינג מלא: טבלה + סה"כ + בלוק תשלום
+      cartBox.innerHTML = `
+        <button class="back-btn" onclick="goBack()">← חזרה</button>
+        <h2>סל הקניות שלך</h2>
+        <table class="cart-table">
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="cart-total">
+          סה"כ לתשלום: $<span id="cartSum">${totalUSD.toFixed(2)}</span>
+        </div>
+        <div id="payArea">
+          ${renderPaymentBlock(totalUSD)}
+        </div>
+      `;
+      updateCartCount();
+    }
+
+    // עדכון כמות מוצר מסוים בעגלה
+    function updateQty(id, qty) {
+      let cart = getUserCart();
+      let item = cart.find(i => i.id == id);
+      if (item) {
+        item.quantity = Math.max(1, parseInt(qty)); // תמיד מינימום 1
+        setUserCart(cart);
+        renderCart();
+      }
+    }
+
+    // הסרת מוצר מהעגלה
+    function removeFromCart(id) {
+      let cart = getUserCart();
+      cart = cart.filter(i => i.id != id);
+      setUserCart(cart);
+      renderCart();
+      updateCartCount()
+    }
+
+    // בניית אזור התשלום (כתובת, אמצעי תשלום, כפתור)
+   function renderPaymentBlock(totalUSD) {
+  const user = getCurrentUser();
+  const address = user.address || '';
+  return `
+    <div class="pay-methods">
+      <div class="cart-address">
+        <label>
+          כתובת למשלוח:
+          <input id="orderAddress" type="text" value="${address}" placeholder="כתובת מלאה למשלוח" autocomplete="shipping street-address" />
+        </label>
+        <div class="note">(אפשר לשנות כתובת להזמנה הזו בלבד)</div>
+      </div>
+      <h3>בחרי שיטת תשלום:</h3>
+      <div class="pay-options">
+        <label>
+          <input type="radio" name="pay-method" value="credit" checked style="accent-color:#6c49ff;"/>
+          <img src="https://cdn-icons-png.flaticon.com/512/179/179457.png" alt="אשראי" width="32" />
+          אשראי
+        </label>
+        <label>
+          <input type="radio" name="pay-method" value="paypal" style="accent-color:#2262f1;"/>
+          <img src="https://img.icons8.com/color/48/000000/paypal.png" alt="PayPal" />
+          PayPal
+        </label>
+        <label>
+          <input type="radio" name="pay-method" value="applepay" style="accent-color:#222;"/>
+          <img src="https://img.icons8.com/color/48/000000/apple-pay.png" alt="Apple Pay" />
+          Apple Pay
+        </label>
+      </div>
+      <div id="creditCardBlock" style="display:block;">
+        <label style="font-weight:600;color:#6c49ff;">
+          מספר כרטיס אשראי:
+          <input id="creditCardNumber" type="text" pattern="\\d*" maxlength="19" placeholder="1234 5678 9012 3456" inputmode="numeric" style="margin-right:0.5em;padding:0.4em 0.7em;font-size:1em;border-radius:8px;border:1.5px solid #b993fc;width:75%;"/>
+        </label>
+        <div class="note">(חובה להזין מספר כרטיס למימוש רכישה באשראי)</div>
+      </div>
+      <div class="pay-sum">
+        <b>סכום לתשלום:</b>
+        <span id="paySum">$${totalUSD.toFixed(2)}</span>
+      </div>
+      <button class="checkout-btn" onclick="checkout()">לתשלום</button>
+    </div>
+  `;
+}
+
+    // --- מודל (חלון קופץ) להצלחה ---
+    function showOrderSuccessModal(msg) {
+      document.getElementById('orderSuccessText').textContent = msg;
+      document.getElementById('orderSuccessModal').style.display = 'flex';
+    }
+    function hideOrderSuccessModal() {
+      document.getElementById('orderSuccessModal').style.display = 'none';
+    }
+
+    // --- תשלום (סיום ההזמנה, שליחה לשרת, איפוס סל) ---
+    async function checkout() {
+      const sum = document.getElementById('paySum').textContent;
+      const method = document.querySelector('input[name="pay-method"]:checked').value;
+      let cart = getUserCart();
+      let user = getCurrentUser();
+      let orderAddress = document.getElementById('orderAddress')?.value.trim() || user.address || "";
+
+      if (!cart.length) {
+        alert("העגלה ריקה, אין מה לשלם.");
+        return;
+      }
+      if (!user.username) {
+        alert("חובה להתחבר כדי לבצע רכישה.");
+        return;
+      }
+      if (!orderAddress) {
+        alert("חובה למלא כתובת למשלוח על מנת לבצע הזמנה.");
+        document.getElementById('orderAddress').focus();
+        return;
+      }
+
+      // בניית אובייקט הזמנה חדשה
+      const newOrder = {
+        orderId: "ORDER_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10),
+        date: new Date().toISOString(),
+        sum: sum,
+        method: method,
+        address: orderAddress,
+        items: cart,
+        status: "completed"
+      };
+
+      try {
+        // שליפת כל המשתמשים מהשרת (BIN)
+        const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+          headers: { "X-Master-Key": API_KEY }
+        });
+        if (!response.ok) throw new Error(`שגיאה בקריאת BIN: ${response.status}`);
+        const data = await response.json();
+        let users = data.record.users;
+        if (!Array.isArray(users)) { users = []; }
+        const userIndex = users.findIndex(u => u.username === user.username);
+        if (userIndex === -1) throw new Error("לא נמצא משתמש מחובר ב־BIN");
+
+        // הוספת ההזמנה החדשה לתוך מערך ההזמנות של המשתמש
+        if (!Array.isArray(users[userIndex].orders)) users[userIndex].orders = [];
+        users[userIndex].orders.push(newOrder); // הוספה
+        users[userIndex].cart = [];             // איפוס סל לאחר תשלום
+
+        // שמירה מחודשת ל־BIN
+        const saveRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Master-Key": API_KEY
+          },
+          body: JSON.stringify({ users: users })
+        });
+        if (!saveRes.ok) throw new Error(`שגיאה בשמירה ל־BIN: ${saveRes.status}`);
+
+        // עדכון localStorage גם כן
+        setCurrentUser(users[userIndex]);
+        localStorage.setItem('cart', '[]');
+        renderCart();
+        showOrderSuccessModal(`ההזמנה בוצעה בהצלחה המוצרים בדרך אלייך ! התשלום בוצע באמצעות ${method}.`);
+        updateCartCount();
+
+      } catch (err) {
+        alert("❌ שגיאה בשמירת ההזמנה. בדקי את ה־console לפרטים.");
+        console.error("❌ שגיאה:", err);
+      }
+    }
+
+    // --- פונקציה לסנכרון עם BIN (שמירה/שליפה לעדכון עגלות) ---
+    async function syncUserWithBin() {
+      if (!localStorage.getItem('user')) return; // לא מחובר
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { "X-Master-Key": API_KEY } });
+        const data = await res.json();
+        const users = data.record.users || [];
+        let localUser = JSON.parse(localStorage.getItem('user') || '{}');
+        let binUser = users.find(u => u.username === localUser.username);
+
+        // בדיקת איזו עגלה עדכנית יותר: מקומית או מהשרת
+        localUser.cartUpdatedAt = localUser.cartUpdatedAt || 0;
+        if (binUser) binUser.cartUpdatedAt = binUser.cartUpdatedAt || 0;
+
+        if (binUser && binUser.cartUpdatedAt > localUser.cartUpdatedAt) {
+          // הגרסה של BIN עדכנית יותר
+          localStorage.setItem('user', JSON.stringify(binUser));
+        } else if (binUser && localUser.cartUpdatedAt > binUser.cartUpdatedAt) {
+          // local עדכני יותר - שמירה ל-BIN
+          let idx = users.findIndex(u => u.username === localUser.username);
+          users[idx] = localUser;
+          await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY },
+            body: JSON.stringify({ users })
+          });
+        }
+      } catch (err) {
+        console.warn("שגיאה בסנכרון עם BIN:", err);
+      }
+    }
+
+    // ----- אתחול ראשוני: רנדרינג סל ועדכון מונה -----
+    renderCart();
+    updateCartCount();
+
+    
+    window.updateQty = updateQty;
+    window.removeFromCart = removeFromCart;
+    window.checkout = checkout;
+    window.goBack = goBack;
+    window.showOrderSuccessModal = showOrderSuccessModal;
+    window.hideOrderSuccessModal = hideOrderSuccessModal;
+
+  </script>
+</body>
+
+</html>

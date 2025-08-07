@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>הפרופיל שלי - חנות דיגיטלית</title>
+  <style>
+    body {
+      font-family: Arial,sans-serif;
+      background: linear-gradient(120deg,#e0c3fc 0%,#8ec5fc 100%);
+      direction: rtl;
+      margin:0;
+      min-height: 100vh;
+    }
+    .profile-container {
+      max-width: 680px;
+      margin: 2.5em auto 1.5em auto;
+      background:#fff;
+      border-radius: 22px;
+      box-shadow: 0 8px 48px #b993fc32;
+      padding: 2.2em 1.5em 2.4em 1.5em;
+      position: relative;
+    }
+    .profile-header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:2px solid #ece6ff;
+      padding-bottom:1em;
+      margin-bottom:2em;
+      gap: 0.6em;
+    }
+    .profile-header h2 {
+      color:#6c49ff;
+      font-size:1.6em;
+      margin:0;
+      flex: 1;
+      text-align: center;
+    }
+    /* כפתור חזור */
+    .back-btn {
+      background: #ece6ff;
+      color: #5441ba;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.12em;
+      font-weight: 600;
+      padding: 0.5em 1.2em;
+      margin-left: 0.7em;
+      cursor: pointer;
+      transition: background .18s, color .18s;
+      order: 3;
+    }
+    .back-btn:hover {
+      background: #d6cefc;
+      color: #6c49ff;
+    }
+    .logout-btn {
+      background:#e02b2b;
+      color:#fff;
+      border:none;
+      border-radius:13px;
+      padding:0.7em 2.1em;
+      font-size:1.05em;
+      font-weight:bold;
+      cursor:pointer;
+      transition:background .18s;
+    }
+    .logout-btn:hover { background:#fd5252; }
+
+    /* פרטים אישיים */
+    .section { margin-bottom:2.1em; }
+    .section h3 { color:#5441ba; margin-bottom:0.7em; font-size:1.17em; }
+    .profile-field {
+      display:flex;
+      align-items:center;
+      margin-bottom:1em;
+      gap:0.8em;
+      flex-wrap: wrap;
+    }
+    .profile-field label { font-weight:600; color:#26215c; min-width:82px; }
+    .profile-field input {
+      border:1.5px solid #b993fc;
+      border-radius:9px;
+      padding:0.55em 1em;
+      font-size:1.06em;
+      flex:1;
+      background:#f8f6fc;
+      min-width: 100px;
+    }
+    .profile-field input:disabled { background:#ece6ff; color:#8c8c8c;}
+    .profile-field button {
+      margin-right:0.6em;
+      background:#6c49ff;
+      color:#fff;
+      border:none;
+      border-radius:7px;
+      padding:0.4em 1.2em;
+      font-size:1em;
+      cursor:pointer;
+      transition: background 0.15s;
+    }
+    .profile-field button:hover { background:#5441ba;}
+
+    /* רשימת הזמנות */
+    .orders-list { margin-top:1.3em; }
+    .order-item {
+      background:#f8f6fc;
+      border-radius:10px;
+      padding:1em;
+      margin-bottom:1em;
+      border:1px solid #ece6ff;
+      cursor:pointer;
+      transition: box-shadow 0.17s;
+    }
+    .order-item:hover { box-shadow: 0 2px 14px #b993fc36; background: #f0e8fd; }
+    .order-header { display:flex; justify-content:space-between; margin-bottom:0.5em; }
+    .order-id { font-weight:600; color:#6c49ff; }
+    .order-date { color:#888; font-size:0.92em; }
+    .order-total { color:#fd52af; font-weight:700; font-size:1.07em;}
+    .order-status { font-size:0.93em; color:#666; }
+
+    /* פאנל הזמנה (צדדי) */
+    .order-panel-bg {
+      position:fixed; top:0; right:0; bottom:0; left:0;
+      background:rgba(35,33,53,0.29);
+      z-index:1000;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      transition: opacity 0.2s;
+    }
+    .order-panel-bg.open { display:flex; }
+
+    .order-panel {
+      background:#fff;
+      border-radius: 17px;
+      box-shadow: 0 6px 44px #b993fc32;
+      padding: 2em 1em 1.5em 1em;
+      max-width: 440px;
+      width: 98vw;
+      position:relative;
+      animation: fadeIn .35s;
+      direction: rtl;
+      max-height: 95vh;
+      overflow-y: auto;
+    }
+    .order-panel .close-panel {
+      position:absolute;
+      left: 1em; top: 1em;
+      font-size: 1.8em;
+      color: #888;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color .17s;
+    }
+    .order-panel .close-panel:hover { color: #fd52af; }
+    .order-panel h3 {
+      margin-top:0;
+      color: #6c49ff;
+      font-size:1.19em;
+      margin-bottom: 1em;
+    }
+    .order-products-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85em;
+      margin-bottom: 1.5em;
+    }
+    .order-product-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8em;
+      padding: 0.6em 0.4em;
+      background: #f8f6fc;
+      border-radius: 10px;
+      box-sizing: border-box;
+    }
+    .order-product-thumb {
+      width: 55px;
+      aspect-ratio: 1/1;
+      background: #ece6ff;
+      border-radius: 10px;
+      object-fit: contain;
+      box-shadow: 0 2px 7px #b993fc12;
+      flex-shrink: 0;
+    }
+    .order-product-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .order-product-title {
+      font-weight:600; color: #26215c; font-size: 1.05em;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .order-product-qty {
+      color: #6c49ff; font-size: 0.98em;
+    }
+    .order-product-price {
+      color: #fd52af; font-weight: 600;
+      font-size: 0.98em;
+      margin-right: 0.7em;
+    }
+    .order-panel .order-meta {
+      font-size: 1em; color:#333; margin-bottom: 0.3em;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 1.2em;
+    }
+    .order-panel .order-meta b { color:#6c49ff; }
+    @media (max-width:600px){
+      .profile-container { padding:1em 0.3em;}
+      .order-item { font-size:0.97em;}
+      .order-panel { padding: 1em 0.3em 0.9em 0.3em; max-width:97vw;}
+      .order-product-thumb { width: 38px; }
+    }
+    @keyframes fadeIn {
+      from { opacity:0; transform:translateY(30px);}
+      to { opacity:1; transform:translateY(0);}
+    }
+  </style>
+</head>
+<body>
+  <div class="profile-container">
+    <!-- הדר כולל חזור + התנתקות -->
+    <div class="profile-header">
+      <!-- כפתור חזור -->
+      <button class="back-btn" onclick="goBack()" title="חזור">
+        ← חזור
+      </button>
+      <h2>הפרופיל שלי</h2>
+      <button class="logout-btn" onclick="logoutUser()">התנתק</button>
+    </div>
+    <!-- פרטים אישיים -->
+    <div class="section" id="personalSection">
+      <h3>פרטים אישיים</h3>
+      <div class="profile-field">
+        <label>שם משתמש:</label>
+        <input type="text" id="profileName" disabled>
+        <button onclick="editField('name')" id="editNameBtn">ערוך</button>
+      </div>
+      <div class="profile-field">
+        <label>מייל:</label>
+        <input type="email" id="profileEmail" disabled>
+        <button onclick="editField('email')" id="editEmailBtn">ערוך</button>
+      </div>
+      <div class="profile-field">
+        <label>טלפון:</label>
+        <input type="text" id="profilePhone" disabled>
+        <button onclick="editField('phone')" id="editPhoneBtn">ערוך</button>
+      </div>
+      <div class="profile-field">
+        <label>כתובת:</label>
+        <input type="text" id="profileAddress" disabled>
+        <button onclick="editField('address')" id="editAddressBtn">ערוך</button>
+      </div>
+    </div>
+
+    <!-- רשימת הזמנות קודמות -->
+    <div class="section">
+      <h3>הזמנות קודמות</h3>
+      <div class="orders-list" id="ordersList"></div>
+    </div>
+  </div>
+
+  <!-- פאנל צד של פרטי הזמנה (מוסתר כברירת מחדל) -->
+  <div class="order-panel-bg" id="orderPanelBg">
+    <div class="order-panel" id="orderPanel">
+      <button class="close-panel" onclick="closeOrderPanel()" title="סגור">&times;</button>
+      <!-- התוכן של הפאנל ייטען כאן בדינאמיות -->
+    </div>
+  </div>
+
+  <script>
+    // -- הגדרות קבועות ל־JSONBin --
+    const BIN_ID = "687d68e6fdac391a2ff106cd";
+    const API_KEY = "$2a$10$jUdVbRFsQ.nFPu9sdEhLGuFKyLKnsopNmK7f9K2anJSQ3noWGvHMq";
+
+    // --- עזר: טעינת משתמש ---
+    function getUser() {
+      try { return JSON.parse(localStorage.getItem('user') || '{}'); }
+      catch { return {}; }
+    }
+    function setUser(userObj) { localStorage.setItem('user', JSON.stringify(userObj)); }
+    function clearUser() { localStorage.removeItem('user'); }
+    function logoutUser() { clearUser(); location.href = 'index.html'; }
+
+    // --- כפתור חזור ---
+    function goBack() {
+      if (window.history.length > 1) window.history.back();
+      else window.location.href = "index.html";
+    }
+
+    // --- עוזר להמיר תחילת מילה לאות גדולה (לשימוש ב־id כפתורים) ---
+    function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+
+    // --- טוען פרופיל המשתמש וכל ההזמנות ---
+    async function loadProfile() {
+      // שליפת כל המשתמשים מה־BIN
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { "X-Master-Key": API_KEY } });
+      const data = await res.json();
+      const users = data.record.users || [];
+      let user = getUser();
+      // שליפת המשתמש הנוכחי
+      let realUser = users.find(u => u.username === user.username);
+      if (!realUser) { logoutUser(); return; }
+      // עדכון הפרטים
+      document.getElementById('profileName').value = realUser.username || '';
+      document.getElementById('profileEmail').value = realUser.email || '';
+      document.getElementById('profilePhone').value = realUser.phone || '';
+      document.getElementById('profileAddress').value = realUser.address || '';
+      setUser(realUser);
+      // טען את רשימת ההזמנות
+      renderOrders(realUser.orders || []);
+    }
+
+    // --- מציג את כל ההזמנות (כל הזמנה נלחצת תפתח פאנל עם פירוט) ---
+    function renderOrders(orders = []) {
+      const ordersList = document.getElementById('ordersList');
+      if (!orders.length) {
+        ordersList.innerHTML = `<div style="text-align:center;color:#888;padding:1.4em;">אין הזמנות קודמות</div>`;
+        return;
+      }
+      ordersList.innerHTML = orders.map(order => `
+        <div class="order-item" onclick="showOrderPanel('${order.orderId.replace(/'/g, "\\'")}')">
+          <div class="order-header">
+            <span class="order-id">הזמנה #${order.orderId}</span>
+            <span class="order-date">${new Date(order.date).toLocaleDateString('he-IL')}</span>
+          </div>
+          <div style="margin-bottom:0.5em;">
+            ${order.items.map(item => `${item.title} (x${item.quantity})`).join(', ')}
+          </div>
+          <div class="order-total">סה"כ: ${order.sum}</div>
+          <div class="order-status">
+            סטטוס: ${order.status === 'completed' ? 'הושלמה' : 'בעיבוד'}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // --- פאנל פרטי הזמנה בצד ---
+    async function showOrderPanel(orderId) {
+      // מוצא את המשתמש וההזמנה
+      let user = getUser();
+      let order = (user.orders || []).find(o => o.orderId === orderId);
+      if (!order) return;
+      // בונה HTML של הפאנל
+      let html = `
+        <button class="close-panel" onclick="closeOrderPanel()" title="סגור">&times;</button>
+        <h3>פרטי הזמנה #${order.orderId}</h3>
+        <div class="order-meta"><b>תאריך:</b> <span>${new Date(order.date).toLocaleDateString('he-IL')}</span></div>
+        <div class="order-meta"><b>כתובת:</b> <span>${order.address || '-'}</span></div>
+        <div class="order-meta"><b>סטטוס:</b> <span>${order.status === 'completed' ? 'הושלמה' : 'בעיבוד'}</span></div>
+        <div class="order-meta"><b>סכום:</b> <span>${order.sum}</span></div>
+        <div class="order-meta"><b>אמצעי תשלום:</b> <span>${order.method || '-'}</span></div>
+        <div style="font-weight:bold;color:#5441ba;margin-top:1.5em;">מוצרים בהזמנה:</div>
+        <div class="order-products-list">
+          ${order.items.map(item => `
+            <div class="order-product-row">
+              <img class="order-product-thumb" src="${item.thumbnail}" alt="${item.title}">
+              <div class="order-product-info">
+                <div class="order-product-title">${item.title}</div>
+                <div class="order-product-qty">כמות: ${item.quantity}</div>
+              </div>
+              <div class="order-product-price">
+                $${Number(item.price).toLocaleString()} <span style="font-size:0.95em;color:#999;">ליח'</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      // מראה את הפאנל ומכניס את התוכן
+      document.getElementById('orderPanel').innerHTML = html;
+      document.getElementById('orderPanelBg').classList.add('open');
+    }
+
+    // --- סגירת פאנל ההזמנה ---
+    function closeOrderPanel() {
+      document.getElementById('orderPanelBg').classList.remove('open');
+    }
+
+    // --- עריכת שדה בפרופיל ---
+    function editField(field) {
+      const input = document.getElementById(`profile${capitalize(field)}`);
+      const btn = document.getElementById(`edit${capitalize(field)}Btn`);
+      if (input.disabled) {
+        input.disabled = false;
+        input.focus();
+        btn.textContent = 'שמור';
+        btn.onclick = () => saveField(field);
+      }
+    }
+    // --- שמירת ערך לשדה ועדכון ב־BIN ---
+    async function saveField(field) {
+      const input = document.getElementById(`profile${capitalize(field)}`);
+      const btn = document.getElementById(`edit${capitalize(field)}Btn`);
+      const newValue = input.value.trim();
+      if (!newValue) { alert('השדה לא יכול להיות ריק'); return; }
+      // שליפה ועדכון
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { "X-Master-Key": API_KEY } });
+      const data = await res.json();
+      const users = data.record.users || [];
+      let user = getUser();
+      let idx = users.findIndex(u => u.username === user.username);
+      if (idx !== -1) {
+        if (field === 'name') {
+          users[idx]['username'] = newValue;
+          user['username'] = newValue;
+        } else {
+          users[idx][field] = newValue;
+          user[field] = newValue;
+        }
+        await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+          method: "PUT", headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY },
+          body: JSON.stringify({ users })
+        });
+        setUser(user);
+        input.disabled = true;
+        btn.textContent = 'ערוך';
+        btn.onclick = () => editField(field);
+        alert('הפרטים עודכנו בהצלחה!');
+      }
+    }
+    // --- טען את הדף בטעינה ---
+    document.addEventListener('DOMContentLoaded', loadProfile);
+
+    // --- סגור פאנל בלחיצה מחוץ (על הרקע) ---
+    document.getElementById('orderPanelBg').addEventListener('click', function(e) {
+      if (e.target === this) closeOrderPanel();
+    });
+  </script>
+</body>
+</html>
