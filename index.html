@@ -157,7 +157,6 @@
       const cartCountEl = document.getElementById('cartCount');
       if (cartCountEl) cartCountEl.textContent = sum;
     }
-      window.updateCartCount = updateCartCount;
 
     // שליפת סל קניות של המשתמש
     function getUserCart() {
@@ -685,50 +684,9 @@
 
       scrollStep();
     }
-(function () {
-  function refreshBadge() {
-    try {
-      if (typeof updateCartCount === 'function') {
-        updateCartCount();
-        return;
-      }
-    } catch (e) {}
-    // גיבוי אם אין updateCartCount זמינה
-    const el = document.getElementById('cartCount');
-    if (!el) return;
-    try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const cart = Array.isArray(user.cart) ? user.cart : JSON.parse(localStorage.getItem('cart') || '[]');
-      const count = (cart || []).reduce((s, i) => s + (i.quantity || 1), 0);
-      el.textContent = String(count || 0);
-    } catch {
-      el.textContent = '0';
-    }
-  }
 
-  // כשהדף חוזר מהיסטוריה (bfcache) – לא מריץ מחדש DOMContentLoaded
-  window.addEventListener('pageshow', refreshBadge);
-
-  // כשדף אחר מעדכן את localStorage (למשל checkout שם lastCartChange)
-  window.addEventListener('storage', function (e) {
-    if (e.key === 'lastCartChange' || e.key === 'user' || e.key === 'cart') {
-      refreshBadge();
-    }
-  });
-
-  // גם כשחוזרים לפוקוס/נראה
-  window.addEventListener('focus', refreshBadge);
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible') refreshBadge();
-  });
-
-  // רענון ראשוני
-  refreshBadge();
-})();
-  
+  </script>
 </body>
 
 
-</html>
-
-
+</html> 
