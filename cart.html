@@ -535,34 +535,21 @@ async function checkout() {
   const orderAddress = (addressEl?.value || user.address || '').trim();
 
   // בדיקות בסיסיות
-  if (!cart.length) {
-    alert("העגלה ריקה, אין מה לשלם.");
-    return;
-  }
-  if (!user.username) {
-    alert("חובה להתחבר כדי לבצע רכישה.");
-    return;
-  }
-  if (!orderAddress) {
-    alert("חובה למלא כתובת למשלוח.");
-    addressEl?.focus();
-    return;
-  }
+  if (!cart.length) { alert("העגלה ריקה, אין מה לשלם."); return; }
+  if (!user.username) { alert("חובה להתחבר כדי לבצע רכישה."); return; }
+  if (!orderAddress) { alert("חובה למלא כתובת למשלוח."); addressEl?.focus(); return; }
   if (method === 'credit' && !cardInput.value.trim()) {
     alert("חובה להזין מספר כרטיס אשראי.");
     cardInput.focus();
     return;
   }
 
-  // בניית אובייקט הזמנה
+  // בניית הזמנה
   const newOrder = {
     orderId: "ORDER_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10),
     date: new Date().toISOString(),
-    sum: sum,
-    method: method,
-    address: orderAddress,
-    items: cart,
-    status: "completed"
+    sum, method, address: orderAddress,
+    items: cart, status: "completed"
   };
 
   try {
@@ -577,7 +564,7 @@ async function checkout() {
     const userIndex = users.findIndex(u => u.username === user.username);
     if (userIndex === -1) throw new Error("לא נמצא משתמש מחובר ב־BIN");
 
-    // הוספת ההזמנה ואיפוס העגלה בזיכרון
+    // הוספת ההזמנה ואיפוס העגלה
     if (!Array.isArray(users[userIndex].orders)) users[userIndex].orders = [];
     users[userIndex].orders.push(newOrder);
     users[userIndex].cart = [];
@@ -594,16 +581,22 @@ async function checkout() {
     });
     if (!saveRes.ok) throw new Error(`שגיאה בשמירה ל־BIN: ${saveRes.status}`);
 
-    // ✅ איפוס מקומי רק אם השמירה הצליחה
-    setCurrentUser(users[userIndex]); // שומר משתמש עם עגלה ריקה
-    localStorage.setItem('lastCartChange', String(Date.now())); // שידור שינוי לכל הדפים
+    // ✅ איפוס מקומי ושידור שינוי (רק אחרי הצלחה)
+    setCurrentUser(users[userIndex]);                 // user.cart ריק
+    localStorage.setItem('lastCartChange', String(Date.now())); // ישמש את העמוד הקודם לאפס באדג'
 
-    // רענון תצוגה
+    // UI מקומי
     renderCart();
     updateCartCount();
     const badge = document.getElementById('cartCount');
     if (badge) badge.textContent = '0';
 
+    // חזרה אוטומטית לעמוד הקודם בלי רענון (ייתן pageshow שם)
+    setTimeout(() => {
+      if (history.length > 1) history.back();
+    }, 200);
+
+    // הודעת הצלחה (אם נשארים בעמוד לשניה-שתיים)
     showOrderSuccessModal(`ההזמנה בוצעה בהצלחה! המוצרים בדרך אלייך. התשלום בוצע באמצעות ${method}.`);
 
   } catch (err) {
@@ -612,38 +605,6 @@ async function checkout() {
   }
 }
 
-
-    // --- פונקציה לסנכרון עם BIN (שמירה/שליפה לעדכון עגלות) ---
-    async function syncUserWithBin() {
-      if (!localStorage.getItem('user')) return; // לא מחובר
-      try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { "X-Master-Key": API_KEY } });
-        const data = await res.json();
-        const users = data.record.users || [];
-        let localUser = JSON.parse(localStorage.getItem('user') || '{}');
-        let binUser = users.find(u => u.username === localUser.username);
-
-        // בדיקת איזו עגלה עדכנית יותר: מקומית או מהשרת
-        localUser.cartUpdatedAt = localUser.cartUpdatedAt || 0;
-        if (binUser) binUser.cartUpdatedAt = binUser.cartUpdatedAt || 0;
-
-        if (binUser && binUser.cartUpdatedAt > localUser.cartUpdatedAt) {
-          // הגרסה של BIN עדכנית יותר
-          localStorage.setItem('user', JSON.stringify(binUser));
-        } else if (binUser && localUser.cartUpdatedAt > binUser.cartUpdatedAt) {
-          // local עדכני יותר - שמירה ל-BIN
-          let idx = users.findIndex(u => u.username === localUser.username);
-          users[idx] = localUser;
-          await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json", "X-Master-Key": API_KEY },
-            body: JSON.stringify({ users })
-          });
-        }
-      } catch (err) {
-        console.warn("שגיאה בסנכרון עם BIN:", err);
-      }
-    }
 
     // ----- אתחול ראשוני: רנדרינג סל ועדכון מונה -----
     renderCart();
