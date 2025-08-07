@@ -522,78 +522,91 @@ let rows = cart.map(item => {
     }
 
     // --- תשלום (סיום ההזמנה, שליחה לשרת, איפוס סל) ---
-    async function checkout() {
-      const sum = document.getElementById('paySum').textContent;
-      const method = document.querySelector('input[name="pay-method"]:checked').value;
-      let cart = getUserCart();
-      let user = getCurrentUser();
-      let orderAddress = document.getElementById('orderAddress')?.value.trim() || user.address || "";
 
-      if (!cart.length) {
-        alert("העגלה ריקה, אין מה לשלם.");
-        return;
-      }
-      if (!user.username) {
-        alert("חובה להתחבר כדי לבצע רכישה.");
-        return;
-      }
-      if (!orderAddress) {
-        alert("חובה למלא כתובת למשלוח על מנת לבצע הזמנה.");
-        document.getElementById('orderAddress').focus();
-        return;
-      }
+async function checkout() {
+  const sumEl = document.getElementById('paySum');
+  const methodEl = document.querySelector('input[name="pay-method"]:checked');
+  const addressEl = document.getElementById('orderAddress');
 
-      // בניית אובייקט הזמנה חדשה
-      const newOrder = {
-        orderId: "ORDER_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10),
-        date: new Date().toISOString(),
-        sum: sum,
-        method: method,
-        address: orderAddress,
-        items: cart,
-        status: "completed"
-      };
+  const sum = sumEl ? sumEl.textContent : '$0.00';
+  const method = methodEl ? methodEl.value : 'credit';
+  const cart = getUserCart();
+  const user = getCurrentUser();
+  const orderAddress = (addressEl?.value || user.address || '').trim();
 
-      try {
-        // שליפת כל המשתמשים מהשרת (BIN)
-        const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-          headers: { "X-Master-Key": API_KEY }
-        });
-        if (!response.ok) throw new Error(`שגיאה בקריאת BIN: ${response.status}`);
-        const data = await response.json();
-        let users = data.record.users;
-        if (!Array.isArray(users)) { users = []; }
-        const userIndex = users.findIndex(u => u.username === user.username);
-        if (userIndex === -1) throw new Error("לא נמצא משתמש מחובר ב־BIN");
+  if (!cart.length) {
+    alert("העגלה ריקה, אין מה לשלם.");
+    return;
+  }
+  if (!user.username) {
+    alert("חובה להתחבר כדי לבצע רכישה.");
+    return;
+  }
+  if (!orderAddress) {
+    alert("חובה למלא כתובת למשלוח על מנת לבצע הזמנה.");
+    addressEl?.focus();
+    return;
+  }
 
-        // הוספת ההזמנה החדשה לתוך מערך ההזמנות של המשתמש
-        if (!Array.isArray(users[userIndex].orders)) users[userIndex].orders = [];
-        users[userIndex].orders.push(newOrder); // הוספה
-        users[userIndex].cart = [];             // איפוס סל לאחר תשלום
+  // בניית אובייקט הזמנה חדשה
+  const newOrder = {
+    orderId: "ORDER_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10),
+    date: new Date().toISOString(),
+    sum: sum,
+    method: method,
+    address: orderAddress,
+    items: cart,
+    status: "completed"
+  };
 
-        // שמירה מחודשת ל־BIN
-        const saveRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Master-Key": API_KEY
-          },
-          body: JSON.stringify({ users: users })
-        });
-        if (!saveRes.ok) throw new Error(`שגיאה בשמירה ל־BIN: ${saveRes.status}`);
+  try {
+    // שליפת כל המשתמשים מהשרת (BIN)
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+      headers: { "X-Master-Key": API_KEY }
+    });
+    if (!response.ok) throw new Error(`שגיאה בקריאת BIN: ${response.status}`);
+    const data = await response.json();
 
-        // עדכון localStorage גם כן
-        setCurrentUser(users[userIndex]);
-        localStorage.setItem('cart', '[]');
-        renderCart();
-        showOrderSuccessModal(`ההזמנה בוצעה בהצלחה המוצרים בדרך אלייך ! התשלום בוצע באמצעות ${method}.`);
-        updateCartCount();
+    let users = Array.isArray(data.record?.users) ? data.record.users : [];
+    const userIndex = users.findIndex(u => u.username === user.username);
+    if (userIndex === -1) throw new Error("לא נמצא משתמש מחובר ב־BIN");
 
-      } catch (err) {
-        alert("❌ שגיאה בשמירת ההזמנה. בדקי את ה־console לפרטים.");
-        console.error("❌ שגיאה:", err);
-      }
-    }
+    // הוספת ההזמנה החדשה, איפוס סל ושעת עדכון
+    if (!Array.isArray(users[userIndex].orders)) users[userIndex].orders = [];
+    users[userIndex].orders.push(newOrder);
+    users[userIndex].cart = [];
+    users[userIndex].cartUpdatedAt = Date.now();
+
+    // שמירה מחודשת ל־BIN
+    const saveRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Master-Key": API_KEY
+      },
+      body: JSON.stringify({ users })
+    });
+    if (!saveRes.ok) throw new Error(`שגיאה בשמירה ל־BIN: ${saveRes.status}`);
+
+    // עדכון מקומי + שידור שינוי לכל הדפים
+    setCurrentUser(users[userIndex]);           // מעדכן את המשתמש המקומי (כולל עגלה ריקה)
+    localStorage.setItem('cart', '[]');         // תאימות לקוד ישן אם השתמשת ב-'cart' גלובלי
+    localStorage.setItem('lastCartChange', String(Date.now())); // ← מפעיל storage event בלשוניות אחרות
+
+    // רענון UI מקומי
+    renderCart();
+    updateCartCount();
+    const badge = document.getElementById('cartCount');
+    if (badge) badge.textContent = '0';
+
+    showOrderSuccessModal(`ההזמנה בוצעה בהצלחה! המוצרים בדרך אלייך. התשלום בוצע באמצעות ${method}.`);
+
+  } catch (err) {
+    alert("❌ שגיאה בשמירת ההזמנה. בדקי את ה־console לפרטים.");
+    console.error("❌ שגיאה:", err);
+  }
+}
+
 
     // --- פונקציה לסנכרון עם BIN (שמירה/שליפה לעדכון עגלות) ---
     async function syncUserWithBin() {
@@ -641,5 +654,6 @@ let rows = cart.map(item => {
 
   </script>
 </body>
+
 
 </html>
