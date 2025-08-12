@@ -347,7 +347,17 @@
     // ----------- קביעת מזהה BIN ומפתח API לשמירה/שליפה מהשרת -----------
     const BIN_ID = "687d68e6fdac391a2ff106cd";
     const API_KEY = "$2a$10$jUdVbRFsQ.nFPu9sdEhLGuFKyLKnsopNmK7f9K2anJSQ3noWGvHMq";
-
+document.addEventListener('DOMContentLoaded', async () => {
+  if (typeof syncUserWithBin === 'function') {
+    await syncUserWithBin();
+  }
+  if (typeof updateCartCount === 'function') {
+    updateCartCount();
+  }
+  if (typeof renderCart === 'function') {
+    renderCart();
+  }
+});
     // ------- פונקציות ניהול משתמש ועגלה --------
 
     // שליפת המשתמש המחובר מה־localStorage
@@ -684,5 +694,6 @@ window.addEventListener('storage', (e) => {
 </body>
 
 </html>
+
 
 
