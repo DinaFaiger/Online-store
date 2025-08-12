@@ -7,6 +7,25 @@ html, body {
   margin: 0;                               /* אין ריווח מסביב */
   line-height: 1.6;                        /* מרווח בין שורות */
 }
+/* בסיס טוב לרספונסיביות ונגישות */
+*, *::before, *::after { box-sizing: border-box; }
+img, video { max-width: 100%; height: auto; display: block; }
+
+/* טיפוגרפיה נוזלית – שומרת על קריאות בכל גודל מסך */
+:root {
+  --fs-1: clamp(0.95rem, 0.88rem + 0.35vw, 1.05rem);
+  --fs-2: clamp(1.1rem, 0.98rem + 0.8vw, 1.4rem);
+}
+body { font-size: var(--fs-1); }
+
+/* אזור לחיצה נוח בכפתורים */
+button, .add-to-cart-btn, .load-more-btn, .cart-btn, .submenu-btn,
+.user-dropdown button, .login-btn { min-height: 44px; line-height: 1.2; }
+
+/* פחות תנועה למי שמעדיף וגם משפר ביצועים במובייל */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
 
 /* סרגל עליון */
 nav {
@@ -699,4 +718,125 @@ footer::before {
 @keyframes scroll-promo {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
+}
+@media (max-width: 900px) {
+  .nav-header {
+    padding: 0.75rem 3vw;
+    gap: 0.6rem;
+  }
+
+  .nav-search input { min-width: 120px; }
+
+  .menu { gap: 1rem; }
+  .menu-item { font-size: 0.95rem; padding: 0.35rem 0.7rem; }
+
+  .products-container {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+  .product-card { padding: 1rem; }
+  .product-card img { width: 90px; height: 90px; }
+
+  .promo-slider { animation-duration: 26s; } /* מעט איטי יותר */
+  .logo-img { width: 100px; height: 100px; }
+}
+@media (max-width: 600px) {
+  html, body { line-height: 1.55; }
+
+  /* ההדר לשתי שורות – לא צפוף */
+  .nav-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .nav-actions {
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* חיפוש ברוחב מלא */
+  .nav-search {
+    width: 100%;
+    padding: 0.35rem 0.9rem;
+  }
+  .nav-search input {
+    width: 100%;
+    min-width: 0;
+    font-size: 1rem;
+  }
+
+  /* קטגוריות – קומפקטי אך קריא */
+  .menu {
+    gap: 0.5rem;
+    padding: 0.4rem 2vw;
+  }
+  .menu-item {
+    font-size: 0.95rem;
+    padding: 0.35rem 0.6rem;
+  }
+
+  /* מוצרים – שתי עמודות */
+  .products-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+  }
+  .product-card {
+    padding: 0.9rem;
+    border-radius: 12px;
+  }
+  .product-card img {
+    width: 78px; height: 78px;
+    margin-bottom: 0.55rem;
+  }
+  .product-title { font-size: 0.95rem; }
+  .product-price { font-size: 1.02rem; }
+
+  .add-to-cart-btn {
+    font-size: 0.95rem;
+    padding: 0.55rem 0.9rem;
+    border-radius: 18px;
+  }
+
+  /* פחות “כבדות” וצל בכפתור הסל במובייל */
+  .cart-btn {
+    padding: 0.55em 1.1em 0.55em 0.9em;
+    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    transform: none !important;
+  }
+
+  /* קרוסלת מבצעים קומפקטית ואיטית יותר */
+  .promo-container {
+    min-height: 120px;
+    border-radius: 14px;
+  }
+  .promo-item {
+    width: 170px;
+    margin: 0.4rem;
+    padding: 0.8rem;
+  }
+  .promo-item img {
+    width: 80px; height: 80px;
+  }
+  .promo-title { font-size: 0.92rem; }
+  .promo-price { font-size: 1.02rem; }
+  .promo-slider { animation-duration: 30s; }
+
+  /* תגיות קטנות שלא מכסות תוכן */
+  .promo-badge,
+  .promo-badge.banner {
+    font-size: 0.72rem;
+    padding: 0.18em 0.45em;
+    top: 6px; left: 6px;
+  }
+
+  /* פוטר מותאם נייד */
+  footer {
+    font-size: 1rem;
+    padding: 1.4em 0.8em 1.1em 0.8em;
+    margin-top: 1.2em;
+    max-width: 100%;
+    border-radius: 18px 18px 0 0;
+  }
 }
