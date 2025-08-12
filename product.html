@@ -329,7 +329,14 @@
     // --- הגדרות קבועות ל־BIN (שמירת נתוני משתמשים בשרת חיצוני) ---
     const BIN_ID = "687d68e6fdac391a2ff106cd";
     const API_KEY = "$2a$10$jUdVbRFsQ.nFPu9sdEhLGuFKyLKnsopNmK7f9K2anJSQ3noWGvHMq";
-
+document.addEventListener('DOMContentLoaded', async () => {
+  if (typeof syncUserWithBin === 'function') {
+    await syncUserWithBin();
+  }
+  if (typeof updateCartCount === 'function') {
+    updateCartCount();
+  }
+});
     // === פונקציות בסיס לניהול משתמש ועגלה ===
 
     // שליפת משתמש מה־localStorage
@@ -576,5 +583,6 @@ window.addEventListener('storage', (e) => {
 </body>
 
 </html>
+
 
 
