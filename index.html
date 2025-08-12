@@ -684,8 +684,31 @@
 
       scrollStep();
     }
+<script>
+// רענון בעת חזרה לעמוד מהיסטוריה (bfcache)
+window.addEventListener('pageshow', async () => {
+  try {
+    if (typeof syncUserWithBin === 'function') {
+      await syncUserWithBin(); // אם יש – מסנכרן מול ה-BIN
+    }
+  } finally {
+    if (typeof updateCartCount === 'function') updateCartCount();
+    if (typeof renderCart === 'function') renderCart();           // בעמוד cart
+    // בדף הבית אין צורך לקרוא ל-loadProducts מחדש, רק ה-badge
+  }
+});
+
+// סנכרון חי בין דפים/טאבים – כש-localStorage משתנה
+window.addEventListener('storage', (e) => {
+  if (e.key === 'user' || e.key === 'cart' || e.key === 'lastCartChange') {
+    if (typeof updateCartCount === 'function') updateCartCount();
+    if (typeof renderCart === 'function') renderCart();           // בעמוד cart
+  }
+});
+</script>
 
   </script>
 </body>
 
 </html>
+
