@@ -549,7 +549,7 @@
     // --- טעינת פרטי מוצר בעת עליית הדף ---
     loadProduct();
     updateCartCount();
-    <script>
+   
 // רענון בעת חזרה לעמוד מהיסטוריה (bfcache)
 window.addEventListener('pageshow', async () => {
   try {
@@ -570,10 +570,11 @@ window.addEventListener('storage', (e) => {
     if (typeof renderCart === 'function') renderCart();           // בעמוד cart
   }
 });
-</script>
+
 
   </script>
 </body>
 
 </html>
+
 
