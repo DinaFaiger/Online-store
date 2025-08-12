@@ -657,7 +657,7 @@ async function checkout() {
     window.goBack = goBack;
     window.showOrderSuccessModal = showOrderSuccessModal;
     window.hideOrderSuccessModal = hideOrderSuccessModal;
-<script>
+
 // רענון בעת חזרה לעמוד מהיסטוריה (bfcache)
 window.addEventListener('pageshow', async () => {
   try {
@@ -678,10 +678,11 @@ window.addEventListener('storage', (e) => {
     if (typeof renderCart === 'function') renderCart();           // בעמוד cart
   }
 });
-</script>
+
 
   </script>
 </body>
 
 </html>
+
 
