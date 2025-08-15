@@ -675,30 +675,7 @@ if (existing) {
       });
     });
 
-    // --- אנימציה חלקה לסרט המבצעים ---
-    function animatePromoBannerSmooth(container) {
-      if (!container) return;
-
-      const items = container.children;
-      if (items.length === 0) return;
-
-      let scrollAmount = 0;
-      const speed = 0.8; // מהירות גלילה
-
-      function scrollStep() {
-        scrollAmount += speed;
-        container.scrollLeft = scrollAmount;
-
-        // חוזרים להתחלה כשמגיעים לסוף
-        if (scrollAmount >= container.scrollWidth / 2) {
-          scrollAmount = 0;
-          container.scrollLeft = 0;
-        }
-        requestAnimationFrame(scrollStep);
-      }
-
-      scrollStep();
-    }
+ 
 
 // רענון בעת חזרה לעמוד מהיסטוריה (bfcache)
 window.addEventListener('pageshow', async () => {
@@ -726,6 +703,7 @@ window.addEventListener('storage', (e) => {
 </body>
 
 </html>
+
 
 
 
