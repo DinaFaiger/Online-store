@@ -182,19 +182,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       let cart = Array.isArray(user.cart) ? user.cart : [];
 
       // בדיקה האם המוצר כבר בסל
-      let existing = cart.find(item => item.id === id);
-      if (existing) {
-        existing.quantity += 1;
-      } else {
-        cart.push({
-          id,
-          title,
-          thumbnail,
-          price: promoPrice !== null ? promoPrice : price, // שמירת מחיר מבצע אם יש
-          originalPrice: price,
-          quantity: 1
-        });
-      }
+     // בדיקה האם המוצר כבר בסל
+let existing = cart.find(item => item.id === id);
+if (existing) {
+  existing.quantity += 1;
+  
+  // אם עכשיו מוסיפים מחיר מבצע והוא נמוך מהמחיר הנוכחי – עדכן למחיר מבצע
+  if (promoPrice !== null && existing.price > promoPrice) {
+    existing.price = promoPrice;
+  }
+} else {
+  cart.push({
+    id,
+    title,
+    thumbnail,
+    price: promoPrice !== null ? promoPrice : price,
+    originalPrice: price,
+    quantity: 1
+  });
+}
+
 
       user.cart = cart;
       user.cartUpdatedAt = Date.now();
@@ -719,6 +726,7 @@ window.addEventListener('storage', (e) => {
 </body>
 
 </html>
+
 
 
 
