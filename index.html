@@ -316,13 +316,20 @@ if (existing) {
             submenu.appendChild(btn);
           });
           li.appendChild(submenu);
-          li.addEventListener('mouseenter', () => {
-            closeAllMenus();
-            li.classList.add('open');
-          });
-          li.addEventListener('mouseleave', () => {
-            li.classList.remove('open');
-          });
+          let closeTimeout;
+
+li.addEventListener('mouseenter', () => {
+  clearTimeout(closeTimeout); // אם יש טיימר פתוח – מבטלים
+  closeAllMenus();
+  li.classList.add('open');
+});
+
+li.addEventListener('mouseleave', () => {
+  closeTimeout = setTimeout(() => {
+    li.classList.remove('open');
+  }, 250); // מחכה רבע שנייה לפני שסוגר
+});
+
         }
         mainMenu.appendChild(li);
       });
@@ -731,6 +738,7 @@ async function loadRandomMixProducts() {
 </body>
 
 </html>
+
 
 
 
