@@ -646,7 +646,7 @@ if (existing) {
       }
 
       buildMenu();
-      loadProducts();
+      loadRandomMixProducts();
       loadPromoProducts();
 
       // חיפוש מוצרים
@@ -698,11 +698,42 @@ window.addEventListener('storage', (e) => {
   }
 });
 
+async function loadRandomMixProducts() {
+  const allCats = Object.values(categories).flat();
+  const selected = getRandomUnique(allCats, 3); // נבחר 3 קטגוריות אקראיות
+  let products = [];
 
+  for (let cat of selected) {
+    const res = await fetch(`https://dummyjson.com/products/category/${cat}?limit=20`);
+    const data = await res.json();
+
+    // הכנסת מוצרים חדשים ומניעת כפילויות לפי id
+    products = [...new Map(
+      [...products, ...(data.products || [])].map(p => [p.id, p])
+    ).values()];
+  }
+
+  // ערבוב מוצרים
+  products.sort(() => Math.random() - 0.5);
+
+  // שמים אותם במשתנים של המערכת הקיימת
+  allProducts = products;
+  currPage = 0;
+  hasMoreProducts = true;
+
+  // איפוס תצוגה והצגת העמוד הראשון
+  document.getElementById('productsContainer').innerHTML = "";
+  loadMoreProducts();
+
+  // כותרת
+  document.getElementById('productsTitle').textContent =
+    "מיקס מוצרים מקטגוריות: " + selected.map(c => catDisplay[c]).join(", ");
+}
   </script>
 </body>
 
 </html>
+
 
 
 
