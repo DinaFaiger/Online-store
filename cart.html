@@ -165,60 +165,6 @@
       letter-spacing: 0.03em;
     }
 
-    /* אזור תשלום */
-    .pay-methods {
-      margin-top: 2.5em;
-      text-align: center;
-    }
-
-    .pay-methods h3 {
-      color: #6c49ff;
-      margin-bottom: 1.1em;
-      font-size: 1.2em;
-      letter-spacing: 0.04em;
-    }
-
-    .pay-options {
-      display: flex;
-      justify-content: center;
-      gap: 2em;
-      flex-wrap: wrap;
-      margin-bottom: 1.2em;
-    }
-
-    .pay-options label {
-      cursor: pointer;
-      font-size: 1.09em;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 0.25em 0.4em;
-      border-radius: 13px;
-      transition: background 0.16s;
-    }
-
-    .pay-options label:hover {
-      background: #f3f1fa;
-    }
-
-    .pay-options img {
-      width: 38px;
-      vertical-align: middle;
-    }
-
-    /* סכום לתשלום */
-    .pay-sum {
-      margin-top: 1em;
-      font-size: 1.17em;
-      color: #2c1867;
-    }
-
-    .pay-sum span {
-      color: #2262f1;
-      font-weight: bold;
-      margin-right: 0.2em;
-    }
-
     /* כפתור תשלום */
     .checkout-btn {
       display: block;
@@ -253,23 +199,57 @@
       box-shadow: 0 2px 8px #b993fc18;
     }
 
+    /* --- עיצוב למודל פורם התשלום --- */
+    #paymentModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 999;
+      background: rgba(50, 40, 100, 0.6);
+      align-items: center;
+      justify-content: center;
+    }
+
+    #paymentModal .modal-content {
+      background: #fff;
+      border-radius: 21px;
+      padding: 2em;
+      box-shadow: 0 8px 48px #b993fc3a;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    #paymentModal h3 {
+      color: #6c49ff;
+      margin-bottom: 1.5em;
+      font-size: 1.4em;
+      text-align: center;
+    }
+
     /* אזור כתובת למשלוח */
     .cart-address {
-      margin-bottom: 1em;
+      margin-bottom: 1.5em;
     }
 
     .cart-address label {
       font-weight: 600;
       color: #6c49ff;
+      display: block;
+      margin-bottom: 0.5em;
     }
 
     .cart-address input {
-      margin-right: 0.5em;
-      padding: 0.4em 0.7em;
+      padding: 0.6em;
       font-size: 1em;
       border-radius: 8px;
       border: 1.5px solid #b993fc;
-      width: 70%;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .cart-address input:focus {
@@ -279,6 +259,120 @@
     .cart-address .note {
       color: #888;
       font-size: 0.92em;
+      margin-top: 0.3em;
+    }
+
+    /* אזור תשלום במודל */
+    .pay-methods {
+      text-align: center;
+    }
+
+    .pay-methods h4 {
+      color: #6c49ff;
+      margin-bottom: 1.1em;
+      font-size: 1.1em;
+    }
+
+    .pay-options {
+      display: flex;
+      justify-content: center;
+      gap: 1.5em;
+      flex-wrap: wrap;
+      margin-bottom: 1.5em;
+    }
+
+    .pay-options label {
+      cursor: pointer;
+      font-size: 1em;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0.5em;
+      border-radius: 13px;
+      transition: background 0.16s;
+    }
+
+    .pay-options label:hover {
+      background: #f3f1fa;
+    }
+
+    .pay-options img {
+      width: 32px;
+      vertical-align: middle;
+    }
+
+    #creditCardBlock {
+      margin-bottom: 1.5em;
+    }
+
+    #creditCardBlock label {
+      font-weight: 600;
+      color: #6c49ff;
+      display: block;
+      margin-bottom: 0.5em;
+    }
+
+    #creditCardNumber {
+      padding: 0.6em;
+      font-size: 1em;
+      border-radius: 8px;
+      border: 1.5px solid #b993fc;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    #creditCardNumber:focus {
+      border-color: #fd52af;
+    }
+
+    /* סכום לתשלום במודל */
+    .pay-sum {
+      margin: 1.5em 0;
+      font-size: 1.2em;
+      color: #2c1867;
+      text-align: center;
+    }
+
+    .pay-sum span {
+      color: #2262f1;
+      font-weight: bold;
+    }
+
+    /* כפתורים במודל */
+    .modal-buttons {
+      display: flex;
+      gap: 1em;
+      justify-content: center;
+      margin-top: 2em;
+    }
+
+    .modal-btn {
+      padding: 0.7em 2em;
+      border: none;
+      border-radius: 15px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-btn.confirm {
+      background: linear-gradient(90deg, #fd52af 0%, #8ec5fc 100%);
+      color: #fff;
+    }
+
+    .modal-btn.confirm:hover {
+      background: linear-gradient(90deg, #8ec5fc 0%, #fd52af 100%);
+      transform: translateY(-2px);
+    }
+
+    .modal-btn.cancel {
+      background: #ece6ff;
+      color: #6c49ff;
+    }
+
+    .modal-btn.cancel:hover {
+      background: #d4c5ff;
     }
 
     /* --- עיצוב לחלון הצלחה קופץ --- */
@@ -334,6 +428,56 @@
   <!-- הודעת הצלחה (מוסתרת כברירת מחדל) -->
   <div id="successMsg" class="success-msg" style="display:none;"></div>
 
+  <!-- מודל פורם תשלום -->
+  <div id="paymentModal">
+    <div class="modal-content">
+      <h3>השלמת ההזמנה</h3>
+      
+      <div class="cart-address">
+        <label>כתובת למשלוח:</label>
+        <input id="orderAddress" type="text" placeholder="כתובת מלאה למשלוח" autocomplete="shipping street-address" />
+        <div class="note">(אפשר לשנות כתובת להזמנה הזו בלבד)</div>
+      </div>
+
+      <div class="pay-methods">
+        <h4>בחרי שיטת תשלום:</h4>
+        <div class="pay-options">
+          <label>
+            <input type="radio" name="pay-method" value="credit" checked style="accent-color:#6c49ff;"/>
+            <img src="https://cdn-icons-png.flaticon.com/512/179/179457.png" alt="אשראי" />
+            אשראי
+          </label>
+          <label>
+            <input type="radio" name="pay-method" value="paypal" style="accent-color:#2262f1;"/>
+            <img src="https://img.icons8.com/color/48/000000/paypal.png" alt="PayPal" />
+            PayPal
+          </label>
+          <label>
+            <input type="radio" name="pay-method" value="applepay" style="accent-color:#222;"/>
+            <img src="https://img.icons8.com/color/48/000000/apple-pay.png" alt="Apple Pay" />
+            Apple Pay
+          </label>
+        </div>
+
+        <div id="creditCardBlock">
+          <label>מספר כרטיס אשראי:</label>
+          <input id="creditCardNumber" type="text" pattern="\\d*" maxlength="19" placeholder="1234 5678 9012 3456" inputmode="numeric"/>
+          <div class="note">(חובה להזין מספר כרטיס למימוש רכישה באשראי)</div>
+        </div>
+
+        <div class="pay-sum">
+          <b>סכום לתשלום:</b>
+          <span id="paySum">$0.00</span>
+        </div>
+
+        <div class="modal-buttons">
+          <button class="modal-btn confirm" onclick="completeOrder()">אישור תשלום</button>
+          <button class="modal-btn cancel" onclick="hidePaymentModal()">ביטול</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- מודל קופץ (חלון צף) להצלחה ברכישה -->
   <div id="orderSuccessModal">
     <div class="success-content">
@@ -344,20 +488,10 @@
   </div>
 
   <script>
-    // ----------- קביעת מזהה BIN ומפתח API לשמירה/שליפה מהשרת -----------
+    // ----------- BIN ומפתח API לשמירה/שליפה מהשרת -----------
     const BIN_ID = "687d68e6fdac391a2ff106cd";
     const API_KEY = "$2a$10$jUdVbRFsQ.nFPu9sdEhLGuFKyLKnsopNmK7f9K2anJSQ3noWGvHMq";
-document.addEventListener('DOMContentLoaded', async () => {
-  if (typeof syncUserWithBin === 'function') {
-    await syncUserWithBin();
-  }
-  if (typeof updateCartCount === 'function') {
-    updateCartCount();
-  }
-  if (typeof renderCart === 'function') {
-    renderCart();
-  }
-});
+
     // ------- פונקציות ניהול משתמש ועגלה --------
 
     // שליפת המשתמש המחובר מה־localStorage
@@ -383,7 +517,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     // פונקציה לחזרה לעמוד הקודם בדפדפן
     function goBack() { window.history.back(); }
-    // עדכון מונה העגלה (לשימוש בעתיד, לא חובה לעמוד הזה)
+    // עדכון מונה העגלהה)
     function updateCartCount() {
       let count = 0;
       if (localStorage.getItem('user')) {
@@ -410,7 +544,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           <button class="back-btn" onclick="goBack()">← חזרה</button>
           <h2>סל הקניות שלך</h2>
           <div class="cart-empty">העגלה ריקה</div>
-          ${renderPaymentBlock(0)}
         `;
         updateCartCount();
         return;
@@ -419,26 +552,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       // סכום כולל לתשלום
       let totalUSD = 0;
       // בניית שורות מוצרים לטבלה
-let rows = cart.map(item => {
-  let sum = (item.price * item.quantity);
-  totalUSD += sum;
-  return `
-    <tr class="cart-item-row">
-      <td><img src="${item.thumbnail}" class="cart-thumb" /></td>
-      <td class="cart-item-title">${item.title}</td>
-      <td><b>${item.id}</b></td>
-      <td><input type="number" class="cart-qty" value="${item.quantity}" min="1"
-           onchange="updateQty('${item.id}', this.value)" /></td>
-      <td class="cart-price">$${item.price.toFixed(2)}</td>
-      <td>
-        <button class="remove-btn" onclick="removeFromCart('${item.id}')">הסר</button>
-      </td>
-    </tr>
-  `;
-}).join('');
+      let rows = cart.map(item => {
+        let sum = (item.price * item.quantity);
+        totalUSD += sum;
+        return `
+          <tr class="cart-item-row">
+            <td><img src="${item.thumbnail}" class="cart-thumb" /></td>
+            <td class="cart-item-title">${item.title}</td>
+            <td><b>${item.id}</b></td>
+            <td><input type="number" class="cart-qty" value="${item.quantity}" min="1"
+                 onchange="updateQty('${item.id}', this.value)" /></td>
+            <td class="cart-price">$${item.price.toFixed(2)}</td>
+            <td>
+              <button class="remove-btn" onclick="removeFromCart('${item.id}')">הסר</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
 
-
-      // רנדרינג מלא: טבלה + סה"כ + בלוק תשלום
+      // רנדרינג מלא: טבלה + סה"כ + כפתור תשלום
       cartBox.innerHTML = `
         <button class="back-btn" onclick="goBack()">← חזרה</button>
         <h2>סל הקניות שלך</h2>
@@ -448,9 +580,7 @@ let rows = cart.map(item => {
         <div class="cart-total">
           סה"כ לתשלום: $<span id="cartSum">${totalUSD.toFixed(2)}</span>
         </div>
-        <div id="payArea">
-          ${renderPaymentBlock(totalUSD)}
-        </div>
+        <button class="checkout-btn" onclick="showPaymentModal(${totalUSD})">לתשלום</button>
       `;
       updateCartCount();
     }
@@ -475,52 +605,17 @@ let rows = cart.map(item => {
       updateCartCount()
     }
 
-    // בניית אזור התשלום (כתובת, אמצעי תשלום, כפתור)
-   function renderPaymentBlock(totalUSD) {
-  const user = getCurrentUser();
-  const address = user.address || '';
-  return `
-    <div class="pay-methods">
-      <div class="cart-address">
-        <label>
-          כתובת למשלוח:
-          <input id="orderAddress" type="text" value="${address}" placeholder="כתובת מלאה למשלוח" autocomplete="shipping street-address" />
-        </label>
-        <div class="note">(אפשר לשנות כתובת להזמנה הזו בלבד)</div>
-      </div>
-      <h3>בחרי שיטת תשלום:</h3>
-      <div class="pay-options">
-        <label>
-          <input type="radio" name="pay-method" value="credit" checked style="accent-color:#6c49ff;"/>
-          <img src="https://cdn-icons-png.flaticon.com/512/179/179457.png" alt="אשראי" width="32" />
-          אשראי
-        </label>
-        <label>
-          <input type="radio" name="pay-method" value="paypal" style="accent-color:#2262f1;"/>
-          <img src="https://img.icons8.com/color/48/000000/paypal.png" alt="PayPal" />
-          PayPal
-        </label>
-        <label>
-          <input type="radio" name="pay-method" value="applepay" style="accent-color:#222;"/>
-          <img src="https://img.icons8.com/color/48/000000/apple-pay.png" alt="Apple Pay" />
-          Apple Pay
-        </label>
-      </div>
-      <div id="creditCardBlock" style="display:block;">
-        <label style="font-weight:600;color:#6c49ff;">
-          מספר כרטיס אשראי:
-          <input id="creditCardNumber" type="text" pattern="\\d*" maxlength="19" placeholder="1234 5678 9012 3456" inputmode="numeric" style="margin-right:0.5em;padding:0.4em 0.7em;font-size:1em;border-radius:8px;border:1.5px solid #b993fc;width:75%;"/>
-        </label>
-        <div class="note">(חובה להזין מספר כרטיס למימוש רכישה באשראי)</div>
-      </div>
-      <div class="pay-sum">
-        <b>סכום לתשלום:</b>
-        <span id="paySum">$${totalUSD.toFixed(2)}</span>
-      </div>
-      <button class="checkout-btn" onclick="checkout()">לתשלום</button>
-    </div>
-  `;
-}
+    // --- מודל פורם תשלום ---
+    function showPaymentModal(totalUSD) {
+      const user = getCurrentUser();
+      document.getElementById('orderAddress').value = user.address || '';
+      document.getElementById('paySum').textContent = `$${totalUSD.toFixed(2)}`;
+      document.getElementById('paymentModal').style.display = 'flex';
+    }
+
+    function hidePaymentModal() {
+      document.getElementById('paymentModal').style.display = 'none';
+    }
 
     // --- מודל (חלון קופץ) להצלחה ---
     function showOrderSuccessModal(msg) {
@@ -532,7 +627,7 @@ let rows = cart.map(item => {
     }
 
    // --- תשלום (סיום ההזמנה, שליחה לשרת, איפוס סל) ---
-async function checkout() {
+async function completeOrder() {
   const sumEl = document.getElementById('paySum');
   const methodEl = document.querySelector('input[name="pay-method"]:checked');
   const addressEl = document.getElementById('orderAddress');
@@ -610,6 +705,9 @@ async function checkout() {
     localStorage.setItem('cart', '[]');
     localStorage.setItem('lastCartChange', String(Date.now()));
 
+    // סגירת מודל התשלום
+    hidePaymentModal();
+    
     // רענון תצוגה
     renderCart();
     updateCartCount();
@@ -663,11 +761,12 @@ async function checkout() {
     
     window.updateQty = updateQty;
     window.removeFromCart = removeFromCart;
-    window.checkout = checkout;
+    window.showPaymentModal = showPaymentModal;
+    window.hidePaymentModal = hidePaymentModal;
+    window.completeOrder = completeOrder;
     window.goBack = goBack;
     window.showOrderSuccessModal = showOrderSuccessModal;
     window.hideOrderSuccessModal = hideOrderSuccessModal;
-
 // רענון בעת חזרה לעמוד מהיסטוריה (bfcache)
 window.addEventListener('pageshow', async () => {
   try {
@@ -688,12 +787,8 @@ window.addEventListener('storage', (e) => {
     if (typeof renderCart === 'function') renderCart();           // בעמוד cart
   }
 });
-
-
+ 
   </script>
 </body>
 
 </html>
-
-
-
