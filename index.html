@@ -38,7 +38,7 @@
           </div>
         </div>
         <!-- כפתור התחברות -->
-        <button class="login-btn" id="loginBtn" onclick="showLoginPopup()">התחבר</button>
+        <button class="login-btn" id="loginBtn" onclick="window.location.href='login.html'">התחבר</button>
       </div>
     </div>
     <!-- תפריט ראשי של קטגוריות -->
@@ -725,14 +725,13 @@ async function loadRandomMixProducts() {
   document.getElementById('productsContainer').innerHTML = "";
   loadMoreProducts();
 
-  // כותרת
-  document.getElementById('productsTitle').textContent =
-    "מיקס מוצרים מקטגוריות: " + selected.map(c => catDisplay[c]).join(", ");
+ 
 }
   </script>
 </body>
 
 </html>
+
 
 
 
